@@ -79,6 +79,7 @@ nav ul li a, .login-btn {
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
     width: 300px;
     text-align: center;
+    z-index: 1001;
 }
 
 .popup-content {
@@ -87,8 +88,9 @@ nav ul li a, .login-btn {
 
 .popup input {
     width: 70%;
-    margin: 10px 0;
+    margin: 10px;
     padding: 8px;
+    border: 1px 1px 1px 1px black;
 }
 
 .popup button {
