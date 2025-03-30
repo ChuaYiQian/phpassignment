@@ -4,7 +4,7 @@ const slideWidth = slides[0].offsetWidth;
 
 function moveSlide(step) {
     if (step === 1) {
-        slider.style.transition = "transform 0.5s ease-in-out";
+        slider.style.transition = "transform 0.3s ease-in-out";
         slider.style.transform = `translateX(-${slideWidth}px)`;
 
         setTimeout(() => {
@@ -20,7 +20,7 @@ function moveSlide(step) {
         slider.style.transform = `translateX(-${slideWidth}px)`;
 
         setTimeout(() => {
-            slider.style.transition = "transform 0.5s ease-in-out";
+            slider.style.transition = "transform 0.3s ease-in-out";
             slider.style.transform = "translateX(0)";
         }, 50);
     }

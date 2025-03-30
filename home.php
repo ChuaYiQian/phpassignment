@@ -1,3 +1,9 @@
+<?php
+include 'base.php';
+
+$arr = $_db->query('SELECT * FROM product')->fetchAll();
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,10 +26,9 @@
     <div class="slider-container">
         <button class="prev" onclick="moveSlide(-1)">&#10094;</button>
         <div class="slider">
-            <div class="slide"><img src="/images/Luffy.jpg" alt="Product 1"><p>Luffy Series</p><p>From RM49.90</p></div>
-            <div class="slide"><img src="/images/DC.jpg" alt="Product 2"><p>DC Series</p><p>From RM49.90</p></div>
-            <div class="slide"><img src="/images/KungFuPanda.jpg" alt="Product 3"><p>Kung Fu Panda Series</p><p>From RM49.90</p></div>
-            <div class="slide"><img src="/images/HarryPorter.jpg" alt="Product 4"><p>Harry Porter Series</p><p>From RM49.90</p></div>
+        <?php foreach ($arr as $p): ?>
+            <div class="slide"><img src="/images/<?= $p->productPicture ?>"><p><?= $p->productName ?></p><p>RM <?= $p->productPrice ?></p></div>
+            <?php endforeach ?>
         </div>
         <button class="next" onclick="moveSlide(1)">&#10095;</button>
     </div>
