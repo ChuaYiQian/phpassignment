@@ -47,7 +47,7 @@ function createDefaultAdmin($conn) {
 }
 
 createDefaultAdmin($conn);
-?>
+
 
 // Is unique?
 function is_unique($value, $table, $field) {
@@ -167,3 +167,4 @@ function err($key) {
         echo '<span></span>';
     }
 }
+?>
