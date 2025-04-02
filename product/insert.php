@@ -12,7 +12,7 @@ if (is_post()) {
     $productQuantity = req('productQuantity');
     $productStatus = req('productStatus');
     $salesCount = req('salesCount');
-    $f     = get_file('productPicture');
+    $f     = get_file('photo');
 
     // Validate: product id
     if ($productID == '') {
@@ -128,6 +128,7 @@ $_title = 'Product | Insert';
 include '../header.php';
 ?>
 <link rel="stylesheet" href="/css/insertproduct.css">
+<script src="/js/insertproduct.js"></script> 
 
 <form method="post" class="form" enctype="multipart/form-data" novalidate>
     <label for="id">Product ID</label>
@@ -164,16 +165,15 @@ include '../header.php';
 
     <label for="photo">Photo</label>
     <label class="upload" tabindex="0">
-        <?= html_file('productPicture', 'image/*', 'hidden') ?>
+        <?= html_file('photo', 'image/*', 'hidden') ?>
         <img src="/images/photo.jpg">
     </label>
-    <?= err('productPicture') ?>
+    <?= err('photo') ?>
 
     <section>
         <button>Submit</button>
         <button type="reset">Reset</button>
     </section>
 </form>
-
 <?php
 include '../footer.php';

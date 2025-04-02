@@ -13,8 +13,7 @@ $arr = $_db->query('SELECT * FROM product')->fetchAll();
 </style>
 
 <p>
-    <button data-get="/product/insert.php">Insert</button>
-    <a href="/product/insert.php">Home</a>
+    <a href="/product/insert.php">Insert</a>
 </p>
 
 <p><?= count($arr) ?> record(s)</p>
