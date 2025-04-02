@@ -13,7 +13,6 @@ if (is_post()) {
     $productStatus = req('productStatus');
     $salesCount = req('salesCount');
     $f     = get_file('productPicture');
-    echo $productID;
 
     // Validate: product id
     if ($productID == '') {
@@ -32,6 +31,9 @@ if (is_post()) {
     }
     else if (!preg_match('/^C\d{3}$/', $categoryID)) {
         $_err['categoryID'] = 'Invalid format';
+    }
+    else if (!is_exists($categoryID,'category','categoryID')){
+        $_err['categoryID'] = 'CategoryID is not exists.';
     }
 
     // Validate: name
@@ -102,19 +104,21 @@ if (is_post()) {
         $_err['photo'] = 'Maximum 1MB';
     }
 
-    try {
-        $photo = save_photo($f, '../images');
-        $stm = $_db->prepare('
-            INSERT INTO product (productID, productName, productDescription, productPrice, productPicture, productQuantity, productStatus, salesCount, categoryID)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ');
-        
-        $stm->execute([$productID, $productName, $productDescription, $productPrice, $photo, $productQuantity, $productStatus, $salesCount, $categoryID]);
+    if (empty($_err)) {
+        try {
+            $photo = save_photo($f, '../images');
+            $stm = $_db->prepare('
+                INSERT INTO product (productID, productName, productDescription, productPrice, productPicture, productQuantity, productStatus, salesCount, categoryID)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ');
     
-        temp('info', 'Record inserted successfully');
+            $stm->execute([$productID, $productName, $productDescription, $productPrice, $photo, $productQuantity, $productStatus, $salesCount, $categoryID]);
     
-    } catch (PDOException $e) {
-        die("Error inserting data: " . $e->getMessage()); // Show SQL error
+            temp('info', 'Record inserted successfully');
+    
+        } catch (PDOException $e) {
+            die("Error inserting data: " . $e->getMessage());
+        }
     }
 }
 
@@ -123,6 +127,7 @@ if (is_post()) {
 $_title = 'Product | Insert';
 include '../header.php';
 ?>
+<link rel="stylesheet" href="/css/insertproduct.css">
 
 <form method="post" class="form" enctype="multipart/form-data" novalidate>
     <label for="id">Product ID</label>
@@ -141,7 +146,7 @@ include '../header.php';
     <?= html_text('productDescription', 'maxlength="100"') ?>
     <?= err('productDescription') ?>
 
-    <label for="price">Price</label>
+    <label for="price">Price (RM)</label>
     <?= html_number('productPrice',0.01,99.99,0.01) ?>
     <?= err('productPrice') ?>
 
