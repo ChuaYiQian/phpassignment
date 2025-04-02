@@ -1,0 +1,68 @@
+/* Table ------------------------------------------------------------------- */
+
+/* Table Styles */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    border: 1px solid #333;
+    padding: 8px;
+    text-align: left;
+}
+
+.table th {
+    background-color: #777;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+.table th a {
+    color: white; 
+    text-decoration: none; 
+}
+
+.table tr:hover td {
+    background: #ddd;
+}
+
+.table td:last-child {
+    position: relative;
+    text-align: center;
+}
+
+.table td a {
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center;  
+    width: 80px;  
+    height: 35px;  
+    padding: 5px 10px; 
+    margin: 2px 5px;  
+    color: rgb(0, 0, 0);  
+    background-color: #6ab1fe;  
+    text-decoration: none;  
+    border-radius: 5px; 
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.table td a:hover {
+    background-color: #1274dc; 
+}
+
+.table .popup {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    translate: 5px -50%;
+    z-index: 999;
+    border: 1px solid #333;
+    display: none;
+}
+
+.table tr:hover .popup {
+    display: block;
+}
