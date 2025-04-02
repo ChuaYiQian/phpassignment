@@ -4,16 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="/css/header.css">
 </head>
     <header>
         <h1>PopZone Collectibles</h1>
         <nav>
             <ul>
-                <li><a href="home.php">Home</a></li>
-                <li><a href="product.php">Products</a></li>
-                <li><a href="aboutUs.php">About</a></li>
-                <li><a href="contact.php">Contact</a></li>
+                <li><a href="/home.php">Home</a></li>
+                <li><a href="/product.php">Products</a></li>
+                <li><a href="/aboutUs.php">About</a></li>
+                <li><a href="/contact.php">Contact</a></li>
                 <li><button class="login-btn" onclick="openLoginPopup()">Login</button></li>
             </ul>
         </nav>
