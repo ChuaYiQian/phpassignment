@@ -1,44 +1,55 @@
 <?php 
-include 'db.php'; 
+include 'base.php'; 
 
+// Define table columns for display and sorting
 $fields = [
-    'id'          => 'ID',
-    'code'        => 'Code',
-    'discount'    => 'Discount',
-    'status'      => 'Status',
-    'quantity'    => 'Quantity',
-    'created_at'  => 'Created At',
-    'expiry_date' => 'Expiry Date'
+    'voucherID'    => 'ID',
+    'voucherCode'  => 'Code',
+    'startDate'    => 'Start Date',
+    'endDate'      => 'End Date',
+    'discountRate' => 'Discount',
+    'voucherStatus'=> 'Status'
 ];
 
-$sort = $_GET['sort'] ?? 'id';
+// Default sorting options
+$sort = $_GET['sort'] ?? 'voucherID';
 $dir = $_GET['dir'] ?? 'asc';
 
+// Ensure valid sorting field
 if (!array_key_exists($sort, $fields)) {
-    $sort = 'id';
+    $sort = 'voucherID';
 }
+
+// Ensure direction is either ASC or DESC
 $dir = ($dir === 'asc') ? 'asc' : 'desc';
 
+// Filters
 $status_filter = $_GET['status'] ?? '';
 $search_code = $_GET['search_code'] ?? '';
 
-$sql = "SELECT id, code, discount, status, quantity, created_at, expiry_date FROM vouchers WHERE 1=1";
+// Prepare SQL query
+$sql = "SELECT voucherID, voucherCode, startDate, endDate, discountRate, voucherStatus FROM voucher WHERE 1=1";
 $params = [];
 $types = "";
 
+// Apply status filter
 if (!empty($status_filter)) {
-    $sql .= " AND status = ?";
+    $sql .= " AND voucherStatus = ?";
     $params[] = $status_filter;
     $types .= "s";
 }
+
+// Apply search filter
 if (!empty($search_code)) {
-    $sql .= " AND code LIKE ?";
+    $sql .= " AND voucherCode LIKE ?";
     $params[] = "%$search_code%";
     $types .= "s";
 }
 
+// Add sorting
 $sql .= " ORDER BY $sort $dir";
 
+// Prepare and execute query
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
     die("SQL Error: " . $conn->error);
@@ -51,6 +62,7 @@ if (!empty($params)) {
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Store vouchers in array
 $vouchers = [];
 while ($row = $result->fetch_object()) {
     $vouchers[] = $row;
@@ -68,6 +80,7 @@ while ($row = $result->fetch_object()) {
 
 <h2>Voucher List</h2>
 
+<!-- Search and Filter Form -->
 <form method="GET">
     <input type="text" name="search_code" placeholder="Search by Code" value="<?= htmlspecialchars($search_code) ?>">
     <button type="submit">Search</button>
@@ -80,6 +93,7 @@ while ($row = $result->fetch_object()) {
     </select>
 </form>
 
+<!-- Voucher Table -->
 <table class="table">
     <tr>
         <?php foreach ($fields as $key => $label): ?>
@@ -95,30 +109,31 @@ while ($row = $result->fetch_object()) {
     <?php if (!empty($vouchers)): ?>
         <?php foreach ($vouchers as $s): ?>
         <tr>
-            <td><?= $s->id ?></td>
-            <td><?= htmlspecialchars($s->code) ?></td>
-            <td><?= $s->discount ?>%</td>
-            <td><?= $s->status ?></td>
-            <td><?= max(0, $s->quantity) ?></td>
-            <td><?= $s->created_at ?></td>
-            <td><?= $s->expiry_date ?></td>
+            <td><?= $s->voucherID ?></td>
+            <td><?= htmlspecialchars($s->voucherCode) ?></td>
+            <td><?= $s->startDate ?></td>
+            <td><?= $s->endDate ?></td>
+            <td><?= $s->discountRate ?>%</td>
+            <td><?= $s->voucherStatus ?></td>
             <td>
-                <a href="product/edit_voucher.php?id=<?= $s->id ?>">Edit</a>
-                <a href="product/delete_voucher.php?id=<?= $s->id ?>" onclick="return confirm('Delete this voucher?')">Delete</a>
+                <a href="voucher/edit_voucher.php?id=<?= $s->voucherID ?>">Edit</a>
+                <a href="voucher/delete_voucher.php?id=<?= $s->voucherID ?>" onclick="return confirm('Delete this voucher?')">Delete</a>
             </td>
         </tr>
         <?php endforeach; ?>
     <?php else: ?>
-        <tr><td colspan="8" style="text-align:center;">No vouchers found</td></tr>
+        <tr><td colspan="7" style="text-align:center;">No vouchers found</td></tr>
     <?php endif; ?>
 </table>
 
-<a href="product/add_voucher.php"><button>Add Voucher</button></a>
+<!-- Add Voucher Button -->
+<a href="voucher/add_voucher.php"><button>Add Voucher</button></a>
 
 </body>
 </html>
 
 <?php 
+
 $stmt->close();
 $conn->close(); 
 ?>
