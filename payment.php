@@ -12,7 +12,6 @@ $shippingFee = 5.00;
 
 if (isset($_POST['apply_voucher'])) {
     $code = $_POST['voucher_code'] ?? '';
-
     $stmt = $conn->prepare("SELECT * FROM voucher WHERE voucherCode = ? AND voucherStatus = 'Active' AND startDate <= CURDATE() AND endDate >= CURDATE()");
     $stmt->bind_param("s", $code);
     $stmt->execute();
@@ -33,17 +32,32 @@ $productIDs = implode(',', array_keys($cart));
 $products = [];
 if (!empty($cart)) {
     $sql = "SELECT * FROM product WHERE productID IN ($productIDs)";
-    $products = $conn->query($sql)->fetch_all();
+    $products = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
 
-$payment_methods = $conn->query("SELECT * FROM paymentmethod")->fetch_all();
+/* Navigate to external web */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $amount = $_POST['amount'];
+    $payment_method = $_POST['payment_method'];
+    $selected_bank = $_POST['bank'] ?? '';
+
+    if ($payment_method === 'fpx' && $selected_bank === 'HongLeong') {
+
+        // Redirect user to HLB payment page
+        header("Location: https://www.hlbepay.com.my/HLB-ePayment/logonDisplay");
+        exit;
+    }
+
+}
+
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Payment Page</title>
+    <title>Checkout</title>
     <link rel="stylesheet" href="/css/payment.css">
 </head>
 <body>
@@ -53,29 +67,30 @@ $payment_methods = $conn->query("SELECT * FROM paymentmethod")->fetch_all();
 <div class="container">
     <div class="cart-section">
         <table>
-            <tr>
-                <th>Image</th>
-                <th>Product</th>
-                <th class="price">Price</th>
-                <th>Qty</th>
-                <th class="price">Subtotal</th>
-            </tr>
-            <?php foreach ($products as $p): 
-                $qty = $cart[$p['productID']];
-                $subtotal = $p['productPrice'] * $qty;
-                $total += $subtotal;
-            ?>
-            <tr>
-                <td><img src="/images/<?= $p['productPicture'] ?>"></td>
-                <td>
-                    <strong><?= $p['productName'] ?></strong><br>
-                    <small><?= $p['productDescription'] ?></small>
-                </td>
-                <td class="price">RM<?= number_format($p['productPrice'], 2) ?></td>
-                <td><?= $qty ?></td>
-                <td class="price">RM<?= number_format($subtotal, 2) ?></td>
-            </tr>
-            <?php endforeach; ?>
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Product</th>
+                    <th class="price">Price(RM)</th>
+                    <th>Qty</th>
+                    <th class="price">Subtotal(RM)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($products as $p): 
+                    $qty = $cart[$p['productID']];
+                    $subtotal = $p['productPrice'] * $qty;
+                    $total += $subtotal;
+                ?>
+                <tr>
+                    <td><img src="/images/<?= $p['productPicture'] ?>"></td>
+                    <td><strong><?= $p['productName'] ?></strong><br><small><?= $p['productDescription'] ?></small></td>
+                    <td class="price">RM<?= number_format($p['productPrice'], 2) ?></td>
+                    <td><?= $qty ?></td>
+                    <td class="price">RM<?= number_format($subtotal, 2) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
         </table>
 
         <div class="voucher-box">
@@ -88,12 +103,11 @@ $payment_methods = $conn->query("SELECT * FROM paymentmethod")->fetch_all();
         </div>
     </div>
 
-    <!-- PAYMENT SIDEBAR -->
-    <div class="sidebar">
+    <!-- PAYMENT -->
         <?php
-        $discountAmount = $total * ($discount / 100);
-        $taxAmount = $total * $taxRate;
-        $finalTotal = $total - $discountAmount + $taxAmount + $shippingFee;
+            $discountAmount = $total * ($discount / 100);
+            $taxAmount = $total * $taxRate;
+            $finalTotal = $total - $discountAmount + $taxAmount + $shippingFee;
         ?>
         <div class="summary">
             <p>Subtotal: RM<?= number_format($total, 2) ?></p>
@@ -103,93 +117,91 @@ $payment_methods = $conn->query("SELECT * FROM paymentmethod")->fetch_all();
             <h3>Total: RM<?= number_format($finalTotal, 2) ?></h3>
         </div>
 
-        <!-- Payment Form -->
         <form method="POST" action="submit_payment.php">
             <input type="hidden" name="amount" value="<?= $finalTotal ?>">
-            <label><strong>Payment Method</strong></label><br><br>
-            <!-- Credit / Debit Card -->
-            <div class="method-option">
-                <input type="radio" name="payment_method" value="card" id="card" onclick="toggleBankList(false)" required>
-                <label for="card">
-                    <img src="/images/cards.png" alt="card"> 
+
+            <div class="payment-methods">
+                <label class="method-option">
+                    <input type="radio" name="payment_method" value="card" onclick="toggleFields('card')" required>
+                    <img src="/images/cards.png" alt="card">
                     Credit / Debit Card
                 </label>
-            </div>
 
-            <!-- Touch 'n Go -->
-            <div class="method-option">
-                <input type="radio" name="payment_method" value="tng" id="tng" onclick="toggleBankList(false)" required>
-                <label for="tng">
-                    <img src="/images/tng.png" alt="tng"> 
-                    Touch 'n Go eWallet
+                <label class="method-option">
+                    <input type="radio" name="payment_method" value="tng" onclick="toggleFields('tng')" required>
+                    <img src="/images/tng.png" alt="tng">
+                    Touch 'n Go
+                </label>
+
+                <label class="method-option">
+                    <input type="radio" name="payment_method" value="fpx" onclick="toggleFields('fpx')" required>
+                    <img src="/images/fpx.png" alt="fpx">
+                    Online Banking
                 </label>
             </div>
 
-            <!-- Online Banking (FPX) -->
-            <div class="method-option">
-                <input type="radio" name="payment_method" value="fpx" id="fpx" onclick="toggleBankList(false)" required>
-                <label for="fpx">
-                    <img src="/images/fpx.png" alt="fpx"> 
-                    FPX (Online Banking)
+            <!-- Card Details -->
+            <div id="card-details" class="card-fields">
+                <input type="text" name="card_number" placeholder="Card Number">
+                <input type="text" name="card_expiry" placeholder="Expiry (MM/YY)">
+                <input type="text" name="card_cvv" placeholder="CVV">
+            </div>
+
+            <!-- Bank Options -->
+            <div id="bank-list" class="bank-list">
+                <label>Select Bank:</label>
+                <label class="bank-option">
+                    <input type="radio" name="bank" value="HongLeong" />
+                    <img src="/images/hongleongbank.png" alt="HongLeong Bank" />
+                    <span>HongLeong Bank</span>
+                </label>
+
+                <label class="bank-option">
+                    <input type="radio" name="bank" value="publicbank" />
+                    <img src="/images/publicbank.png" alt="Public Bank" />
+                    <span>Public Bank</span>
+                </label>
+
+                <label class="bank-option">
+                    <input type="radio" name="bank" value="maybank" />
+                    <img src="/images/maybank.png" alt="Maybank" />
+                    <span>Maybank</span>
                 </label>
             </div>
 
-
-            <div id="bank-list" style="display:none; margin-left: 30px; margin-top:10px;">
-                <label for="bank">Choose your bank:</label>
-                    <div class="bank-option">
-                        <input type="radio" name="bank" value="HongLeong" id="hlb">
-                        <label for="hlb">
-                            <img src="/images/hongleongbank.png" alt="HongLeongBank">
-                            HongLeong Bank
-                        </label>
-                    </div>
-                    <div class="bank-option">
-                        <input type="radio" name="bank" value="PublicBank" id="pb">
-                        <label for="pb">
-                            <img src="/images/publicbank.png" alt="PublicBank">
-                            Public Bank
-                        </label>
-                    </div>
-                    <div class="bank-option">
-                        <input type="radio" name="bank" value="MayBank" id="myb">
-                        <label for="MyB">
-                            <img src="/images/maybank.png" alt="Maybank">
-                            Maybank
-                        </label>
-                    </div>
-                </div>
+            <div class="place-order">
+                <button type="submit">Place Order</button>
             </div>
-
-            <br><br>
-            <button type="submit">Place Order(s)</button>
         </form>
-
-        <script>
-        function toggleBankList(show) {
-            document.getElementById('bank-list').style.display = show ? 'block' : 'none';
-        }
-        </script>
-
-            <!-- Card details placeholder -->
-            <div id="card-details" style="display:none;">
-                <label>Card Number:</label>
-                <input type="text" name="card_number"><br>
-                <label>Expiry:</label>
-                <input type="text" name="card_expiry"><br>
-                <label>CVV:</label>
-                <input type="text" name="card_cvv"><br>
-            </div>
-
-        </form>
-    </div>
 </div>
 
 <script>
-document.querySelectorAll('input[name="payment_method"]').forEach(el => {
-    el.addEventListener('change', () => {
-        const label = el.nextElementSibling?.textContent?.toLowerCase();
-        document.getElementById('card-details').style.display = label.includes("card") ? 'block' : 'none';
+function toggleFields(method) {
+    const cardFields = document.getElementById('card-details');
+    const bankList = document.getElementById('bank-list');
+
+    cardFields.style.display = method === 'card' ? 'block' : 'none';
+    bankList.style.display = method === 'fpx' ? 'block' : 'none';
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const methodRadios = document.querySelectorAll('input[name="payment-method"]');
+    const cardFields = document.querySelector(".card-fields");
+    const bankList = document.querySelector(".bank-list");
+
+    methodRadios.forEach(radio => {
+        radio.addEventListener("change", function () {
+            // Hide all by default
+            cardFields.style.display = "none";
+            bankList.style.display = "none";
+
+            // Show based on selected method
+            if (this.value === "card") {
+                cardFields.style.display = "block";
+            } else if (this.value === "bank") {
+                bankList.style.display = "block";
+            }
+        });
     });
 });
 </script>
