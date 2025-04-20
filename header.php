@@ -1,3 +1,4 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,18 +7,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/header.css">
 </head>
-    <header>
-        <h1>PopZone Collectibles</h1>
-        <nav>
-            <ul>
-                <li><a href="/home.php">Home</a></li>
-                <li><a href="/product.php">Products</a></li>
-                <li><a href="/aboutUs.php">About</a></li>
-                <li><a href="/contact.php">Contact</a></li>
+<header>
+    <h1>PopZone Collectibles</h1>
+    <nav>
+        <ul>
+            <li><a href="/home.php">Home</a></li>
+            <li><a href="/product.php">Products</a></li>
+            <li><a href="/aboutUs.php">About</a></li>
+            <li><a href="/contact.php">Contact</a></li>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <li>
+                    <a href="/cart/cart.php">
+                        <img src="/images/addToCart.png" style="width: 30px; height: 30px;">
+                    </a>
+                </li>
+            <?php else: ?>
                 <li><button class="login-btn" onclick="openLoginPopup()">Login</button></li>
-            </ul>
-        </nav>
-    </header>
+            <?php endif; ?>
+        </ul>
+    </nav>
+</header>
 
 <!-- Login Popup -->
 <div id="loginPopup" class="popup" style="z-index: 99;">
@@ -27,12 +36,12 @@
         <form action="login_process.php" method="POST">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" value="admin" required>
-            
+
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" value="admin" required>
 
             <a href="signup.php" style="display:block">New User? Sign Up Here!</a>
-            
+
             <button type="submit">Login</button>
         </form>
     </div>
@@ -49,29 +58,29 @@
 </div>
 
 <script>
-function openLoginPopup() {
-    document.getElementById("loginPopup").style.display = "block";
-}
-
-function closeLoginPopup() {
-    document.getElementById("loginPopup").style.display = "none";
-}
-
-function openSuccessPopup() {
-    closeLoginPopup();
-    document.getElementById("successPopup").style.display = "block";
-}
-
-function closeSuccessPopup() {
-    document.getElementById("successPopup").style.display = "none";
-    window.location.href = "home.php";
-}
-
-// Check for success parameter in URL
-window.onload = function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.has('login') && urlParams.get('login') === 'success') {
-        openSuccessPopup();
+    function openLoginPopup() {
+        document.getElementById("loginPopup").style.display = "block";
     }
-};
+
+    function closeLoginPopup() {
+        document.getElementById("loginPopup").style.display = "none";
+    }
+
+    function openSuccessPopup() {
+        closeLoginPopup();
+        document.getElementById("successPopup").style.display = "block";
+    }
+
+    function closeSuccessPopup() {
+        document.getElementById("successPopup").style.display = "none";
+        window.location.href = "home.php";
+    }
+
+    // Check for success parameter in URL
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('login') && urlParams.get('login') === 'success') {
+            openSuccessPopup();
+        }
+    };
 </script>
