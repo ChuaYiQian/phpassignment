@@ -12,7 +12,6 @@ $discount = $_POST['discount'];
 $status = $_POST['status'];
 $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : NULL;
 
-// Prepare the SQL update query
 $sql = "UPDATE voucher SET 
         voucherCode = ?, discountRate = ?, voucherStatus = ?, endDate = ? 
         WHERE voucherID = ?";

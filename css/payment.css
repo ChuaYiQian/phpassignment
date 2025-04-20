@@ -1,0 +1,138 @@
+body {
+    font-family: Arial;
+    margin: 40px;
+    background: #f5f5f5;
+}
+
+.container {
+    display: flex;
+    gap: 40px;
+}
+
+.cart-section {
+    flex: 2;
+}
+
+.sidebar {
+    flex: 1;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+}
+
+table {
+    width: 100%;
+    background: #fff;
+    border-collapse: collapse;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ccc;
+}
+
+td.price, th.price {
+    text-align: right;
+}
+
+img {
+    max-height: 80px;
+}
+
+.voucher-box {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.voucher-box input {
+    padding: 6px;
+    width: 200px;
+}
+
+.voucher-box button {
+    padding: 6px 12px;
+}
+
+.summary p {
+    margin: 6px 0;
+    text-align: right;
+}
+
+.summary h3 {
+    text-align: right;
+    margin-top: 10px;
+}
+
+.pay-btn {
+    width: 100%;
+    padding: 10px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.pay-btn:hover {
+    background: #0056b3;
+}
+
+.method-option {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.method-option img,
+.bank-option img {
+    width: 60px;
+    height: 40px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.method-option,
+.bank-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.method-option label,
+.bank-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    text-align: center;
+}
+
+.sidebar button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.sidebar button[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+#card-details input[type="text"] {
+    width: 100%;
+    padding: 6px;
+    margin: 5px 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
