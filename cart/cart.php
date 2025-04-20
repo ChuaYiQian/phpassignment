@@ -1,7 +1,7 @@
 <?php
+session_start();
 include '../base.php';
-
-$userID = "C001";
+$userID = $_SESSION['user_id'];
 $stmt = $_db->prepare("SELECT cartID FROM cart WHERE userID = ?");
 $stmt->execute([$userID]);
 $cart = $stmt->fetch(PDO::FETCH_OBJ);
@@ -39,7 +39,7 @@ $totalPrice = 0;
     <div class="main-container">
         <div class="topbar">
             <div class="topbar-Goback">
-                <a href="homepage.php">
+                <a href="/home.php">
                     <img src="/images/goBackIcon.png" alt="" width="40px" height="40px">
                 </a>
             </div>

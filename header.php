@@ -20,6 +20,12 @@
                     <a href="/cart/cart.php">
                         <img src="/images/addToCart.png" style="width: 30px; height: 30px;">
                     </a>
+
+                </li>
+                <li>
+                    <form action="/logout.php" method="POST" style="display:inline;">
+                        <button type="submit" class="login-btn">Logout</button>
+                    </form>
                 </li>
             <?php else: ?>
                 <li><button class="login-btn" onclick="openLoginPopup()">Login</button></li>
