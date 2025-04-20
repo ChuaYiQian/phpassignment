@@ -127,6 +127,7 @@ $totalPrice = 0;
 
         function updateTotalPrice() {
             const selected = [];
+            const cartID = "<?= $cartID ?>";
 
             checkboxes.forEach(cb => {
                 if (cb.checked) {
@@ -144,7 +145,7 @@ $totalPrice = 0;
                 }
             };
 
-            xhr.send("selected=" + JSON.stringify(selected));
+            xhr.send("selected=" + JSON.stringify(selected) + "&cartID=" + encodeURIComponent(cartID));
         }
 
         checkboxes.forEach(cb => {
