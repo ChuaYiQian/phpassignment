@@ -21,35 +21,71 @@ $stmt->execute([$searchTerm, $searchTerm]);
 $carts = $stmt->fetchAll(PDO::FETCH_OBJ);
 ?>
 
-<form method="get" style="margin: 20px;">
-    <input type="text" name="search" value="<?= htmlspecialchars($keyword) ?>" placeholder="Search by User ID or Name">
-    <button type="submit">Search</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart Maintenance - PopZone Collectibles</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+        tr:hover { background-color: #f5f5f5; }
+        .action-btns a { margin-right: 10px; text-decoration: none; }
+        .btn { padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background-color: #4CAF50; color: white; border: none; }
+        .btn-danger { background-color: #f44336; color: white; border: none; }
+        .btn-edit { background-color: #2196F3; color: white; border: none; }
+        .search-form { margin: 20px 0; }
+        .search-form input[type="text"] { padding: 8px; width: 300px; }
+        .search-form button { padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .results-count { margin: 10px 0; color: #666; }
+    </style>
+</head>
+<body>
+    <?php include '../header.php'; ?>
+    
+    <div class="header">
+        <h1>Cart Maintenance</h1>
+    </div>
 
-<p><?= count($carts) ?> result(s)</p>
+    <form method="get" class="search-form">
+        <input type="text" name="search" value="<?= htmlspecialchars($keyword) ?>" placeholder="Search by User ID or Name">
+        <button type="submit">Search</button>
+    </form>
 
-<table border="1" cellpadding="10">
-    <tr>
-        <th>Cart ID</th>
-        <th>User ID</th>
-        <th>User Name</th>
-        <th>Number of Products</th>
-        <th>Action</th>
-    </tr>
+    <p class="results-count"><?= count($carts) ?> result(s)</p>
 
-    <?php foreach ($carts as $cart): ?>
-        <tr>
-            <td><?= $cart->cartID ?></td>
-            <td><?= $cart->userID ?></td>
-            <td><?= htmlspecialchars($cart->userName) ?></td>
-            <td><?= $cart->numProducts ?></td>
-            <td>
-                <form action="/cartItem/maintenanceCartItem.php" method="get">
-                    <input type="hidden" name="cartID" value="<?= $cart->cartID ?>">
-                    <input type="hidden" name="staffID" value="<?= $staffID?>">
-                    <button type="submit">View Cart Item</button>
-                </form>
-            </td>
-        </tr>
-    <?php endforeach ?>
-</table>
+    <table>
+        <thead>
+            <tr>
+                <th>Cart ID</th>
+                <th>User ID</th>
+                <th>User Name</th>
+                <th>Number of Products</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($carts as $cart): ?>
+                <tr>
+                    <td><?= $cart->cartID ?></td>
+                    <td><?= $cart->userID ?></td>
+                    <td><?= htmlspecialchars($cart->userName) ?></td>
+                    <td><?= $cart->numProducts ?></td>
+                    <td class="action-btns">
+                        <form action="/cartItem/maintenanceCartItem.php" method="get" style="display: inline;">
+                            <input type="hidden" name="cartID" value="<?= $cart->cartID ?>">
+                            <input type="hidden" name="staffID" value="<?= $staffID?>">
+                            <button type="submit" class="btn btn-primary">View Cart Items</button>
+                        </form>
+                    </td>
+                </tr>
+            <?php endforeach ?>
+        </tbody>
+    </table>
+</body>
+</html>
