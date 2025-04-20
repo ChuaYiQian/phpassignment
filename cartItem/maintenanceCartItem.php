@@ -1,162 +1,78 @@
 <?php
 include '../base.php';
 
-$userID = "C001";
-$stmt = $_db->prepare("SELECT cartID FROM cart WHERE userID = ?");
-$stmt->execute([$userID]);
-$cart = $stmt->fetch(PDO::FETCH_OBJ);
-
-if (!$cart) {
-    echo "Cart not found.";
+if (!isset($_GET['cartID'],$_GET['staffID'])) {
+    echo "ID";
     exit;
 }
 
-$cartID = $cart->cartID;
+$cartID = $_GET['cartID'];
+
+
+$cartStmt = $_db->prepare("SELECT userID FROM cart WHERE cartID = ?");
+$cartStmt->execute([$cartID]);
+$user = $cartStmt->fetch(PDO::FETCH_OBJ);
+$userID = $user->userID;
+
 
 $stmt = $_db->prepare("
-    SELECT c.productID, c.cartQuantity, p.productName, p.productDescription, 
-           p.productPrice, p.productQuantity, p.productPicture 
+    SELECT p.productID, p.productName, p.productPrice, c.cartQuantity
     FROM cartItem c
     JOIN product p ON c.productID = p.productID
     WHERE c.cartID = ?
 ");
 $stmt->execute([$cartID]);
-$cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$totalPrice = 0;
-$selectedIDs = $_POST['selected'] ?? [];
-
-foreach ($cartItems as $item) {
-    if (in_array($item['productID'], $selectedIDs)) {
-        $totalPrice += $item['productPrice'] * $item['cartQuantity'];
-    }
-}
+$items = $stmt->fetchAll(PDO::FETCH_OBJ);
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
+<h2>Cart Item List (Cart ID: <?= $cartID ?>)</h2>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Shopping Cart</title>
-    <link rel="stylesheet" href="/css/addToCart.css">
-</head>
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Product ID</th>
+        <th>Product Name</th>
+        <th>Price</th>
+        <th>Quantity in Cart</th>
+        <th>Total</th>
+        <th>Actions</th>
+    </tr>
 
-<body>
+    <?php
+    $grandTotal = 0;
+    foreach ($items as $item):
+        $total = $item->productPrice * $item->cartQuantity;
+        $grandTotal += $total;
+    ?>
+        <tr>
+            <td><?= $item->productID ?></td>
+            <td><?= htmlspecialchars($item->productName) ?></td>
+            <td>RM <?= number_format($item->productPrice, 2) ?></td>
 
-    <div class="main-container">
-        <div class="topbar">
-            <div class="topbar-Goback">
-                <a href="homepage.php">
-                    <img src="/images/goBackIcon.png" width="40px" height="40px">
-                </a>
-            </div>
-            <div class="topbar-text">
-                <h1>Go Back</h1>
-            </div>
-            <div class="topbar-brand">
-                <h1>PopZone Collectibles</h1>
-            </div>
-        </div>
+            <td>
+                <form method="post" action="/cartItem/updateQuantity.php" style="display: inline-block;">
+                    <input type="hidden" name="productID" value="<?= $item->productID ?>">
+                    <input type="hidden" name="cartID" value="<?= $cartID ?>">
+                    <input type="hidden" name="staffID" value="<?= $staffID ?>">
+                    <input type="number" name="cartQuantity" value="<?= $item->cartQuantity ?>" min="1" max="99" required>
+                    <button type="submit">Edit</button>
+                </form>
+            </td>
 
-        <form method="post" class="container">
-            <?php if (empty($cartItems)): ?>
-                <p style="margin: 20px; font-size: 1.2em;">Your cart is currently empty.</p>
-            <?php else: ?>
-                <?php foreach ($cartItems as $item): ?>
-                    <div class="container-product-card">
-                        <div class="product-checkbox">
-                            <input type="checkbox" class="product-tick"
-                                   data-price="<?= $item['productPrice'] * $item['cartQuantity'] ?>"
-                                   name="selected[]"
-                                   value="<?= $item['productID'] ?>"
-                                   <?= in_array($item['productID'], $selectedIDs) ? 'checked' : '' ?>>
-                        </div>
+            <td>RM <?= number_format($total, 2) ?></td>
 
-                        <div class="product-photo">
-                            <img src="/images/<?= $item['productPicture'] ?>" width="200px" height="200px">
-                        </div>
+            <td>
+                <form method="post" action="/cartItem/deleteCartItem.php" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                    <input type="hidden" name="productID" value="<?= $item->productID ?>">
+                    <input type="hidden" name="cartID" value="<?= $cartID ?>">
+                    <input type="hidden" name="staffID" value="<?= $staffID ?>">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+    <?php endforeach; ?>
 
-                        <div class="product-detail">
-                            <div class="product-name">
-                                <h2><?= htmlspecialchars($item['productName']) ?></h2>
-                            </div>
-                            <div class="product-desc">
-                                <p><?= htmlspecialchars($item['productDescription']) ?></p>
-                            </div>
-
-                            <div class="product-quantity">
-                                <form method="post" action="/cartItem/updateQuantity.php">
-                                    Quantity:
-                                    <input type="number" name="newQuantity" value="<?= $item['cartQuantity'] ?>" min="1">
-                                    <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
-                                    <input type="hidden" name="cartID" value="<?= $cartID ?>">
-                                    <button type="submit">Update</button>
-                                </form>
-                            </div>
-
-                            <div class="product-price">
-                                <h2>RM<?= number_format($item['productPrice'], 2) ?></h2>
-                            </div>
-                        </div>
-
-                        <div class="product-delete">
-                            <form method="post" action="/cartItem/deleteCartItem.php" onsubmit="return confirm('Delete this item?');" style="display:inline;">
-                                <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
-                                <input type="hidden" name="cartID" value="<?= $cartID ?>">
-                                <input type="hidden" name="userID" value="<?= $userID ?>">
-                                <button type="submit" style="border:none; background:none;">
-                                    <img src="/images/deleteIcon.png" width="30px" height="30px">
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-
-                <div style="margin-top: 20px;">
-                    <button type="submit">Update Total</button>
-                </div>
-            <?php endif; ?>
-        </form>
-    </div>
-
-    <div class="sidebar">
-        <div class="sidebar-price">
-            <h2>Total Price: <span id="totalPrice">RM<?= number_format($totalPrice, 2) ?></span></h2>
-        </div>
-        <br>
-        <div class="sidebar-btnsec">
-            <form method="post" action="/cart/checkout.php">
-                <input type="hidden" name="cartID" value="<?= $cartID ?>">
-                <input type="hidden" name="userID" value="<?= $userID ?>">
-                <button type="submit">Check Out</button>
-            </form>
-        </div>
-    </div>
-
-</body>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const checkboxes = document.querySelectorAll(".product-tick");
-        const totalPriceElem = document.querySelector("#totalPrice");
-
-        function updateTotal() {
-            let total = 0;
-            checkboxes.forEach(cb => {
-                if (cb.checked) {
-                    total += parseFloat(cb.dataset.price);
-                }
-            });
-            totalPriceElem.textContent = "RM" + total.toFixed(2);
-        }
-
-        checkboxes.forEach(cb => {
-            cb.addEventListener("change", updateTotal);
-        });
-
-        updateTotal();
-    });
-</script>
-
-</html>
+    <tr>
+        <td colspan="4"><strong>Grand Total</strong></td>
+        <td colspan="2"><strong>RM <?= number_format($grandTotal, 2) ?></strong></td>
+    </tr>
+</table>
