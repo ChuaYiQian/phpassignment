@@ -7,20 +7,21 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
 
 
 // Global PDO object
-$_db = new PDO('mysql:dbname=assignment', 'root', '', [
+$_db = new PDO('mysql:host=localhost;port=4306;dbname=assignment', 'root', '', [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
 ]);
 
-$host = "localhost";   
+$host = "localhost:4306";   
 $user = "root";        
 $password = ""; 
-$database = "assignment"; // Changed to match your database name
+$database = "assignment";
 
 $conn = new mysqli($host, $user, $password, $database);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
 
 function generateUserID($conn, $prefix = 'C') {
     $sql = "SELECT MAX(CAST(SUBSTRING(userID, 2) AS UNSIGNED)) as max_num
