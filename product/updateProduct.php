@@ -2,9 +2,23 @@
 include '../base.php';
 
 // ----------------------------------------------------------------------------
+$productID = $_GET['id'];
+
+if (!is_post()) {
+    $stm = $_db->prepare("SELECT * FROM product WHERE productID = ?");
+    $stm->execute([$productID]);
+    $row = $stm->fetch(PDO::FETCH_ASSOC);
+
+    if ($row) {
+        foreach ($row as $key => $value) {
+            $GLOBALS[$key] = $value;
+        }
+    } else {
+        die("Product not found");
+    }
+}
 
 if (is_post()) {
-    $productID = req('productID');
     $categoryID = req("categoryID");
     $productName  = req('productName');
     $productDescription = req('productDescription');
@@ -13,17 +27,6 @@ if (is_post()) {
     $productStatus = req('productStatus');
     $salesCount = req('salesCount');
     $f     = get_file('photo');
-
-    // Validate: product id
-    if ($productID == '') {
-        $_err['productID'] = 'Required';
-    }
-    else if (!preg_match('/^P\d{3}$/', $productID)) {
-        $_err['productID'] = 'Invalid format';
-    }
-    else if (!is_unique($productID, 'product', 'productID')) {
-        $_err['productID'] = 'Duplicated';
-    }
 
     //Validate: category id
     if ($categoryID == '') {
@@ -48,8 +51,8 @@ if (is_post()) {
     if ($productDescription == '') {
         $_err['productDescription'] = 'Required';
     }
-    else if (strlen($productDescription) > 100) {
-        $_err['productDescription'] = 'Maximum 100 characters';
+    else if (strlen($productDescription) > 255) {
+        $_err['productDescription'] = 'Maximum 255 characters';
     }
 
     // Validate: price
@@ -103,18 +106,17 @@ if (is_post()) {
     else if ($f->size > 1 * 1024 * 1024) {
         $_err['photo'] = 'Maximum 1MB';
     }
-
     if (empty($_err)) {
         try {
             $photo = save_photo($f, '../images');
             $stm = $_db->prepare('
-                INSERT INTO product (productID, productName, productDescription, productPrice, productPicture, productQuantity, productStatus, salesCount, categoryID)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                UPDATE product SET productName=?, productDescription=?, productPrice=?, productPicture=?, productQuantity=?, productStatus=?, salesCount=?, categoryID=? WHERE productID=?
             ');
     
-            $stm->execute([$productID, $productName, $productDescription, $productPrice, $photo, $productQuantity, $productStatus, $salesCount, $categoryID]);
+            $stm->execute([$productName, $productDescription, $productPrice, $photo, $productQuantity, $productStatus, $salesCount, $categoryID, $productID]);
     
-            temp('info', 'Record inserted successfully');
+            temp('info', 'Record updated successfully');
+            header('Location: /product/maintenance.php');
     
         } catch (PDOException $e) {
             die("Error inserting data: " . $e->getMessage());
@@ -124,49 +126,51 @@ if (is_post()) {
 
 // ----------------------------------------------------------------------------
 
-$_title = 'Product | Insert';
+$_title = 'Product | Update';
 include '../header.php';
 ?>
 <link rel="stylesheet" href="/css/insertproduct.css">
 <script src="/js/insertproduct.js"></script> 
 
 <form method="post" class="form" enctype="multipart/form-data" novalidate>
-    <label for="id">Product ID</label>
-    <?= html_text('productID', 'maxlength="4" placeholder="P999" data-upper') ?>
-    <?= err('productID') ?>
+    <label for="id">Product ID: <?php echo $productID ?></label>
+    <?= html_hidden('productID'); ?>
 
-    <label for="id">Category ID</label>
+    <label for="categoryID">Category ID</label>
     <?= html_text('categoryID', 'maxlength="4" placeholder="C999" data-upper') ?>
     <?= err('categoryID') ?>
 
-    <label for="name">Name</label>
+    <label for="productName">Name</label>
     <?= html_text('productName', 'maxlength="100"') ?>
     <?= err('productName') ?>
 
-    <label for="description">Description</label>
+    <label for="productDescription">Description</label>
     <?= html_text('productDescription', 'maxlength="100"') ?>
     <?= err('productDescription') ?>
 
-    <label for="price">Price (RM)</label>
-    <?= html_number('productPrice',0.01,99.99,0.01) ?>
+    <label for="productPrice">Price (RM)</label>
+    <?= html_number('productPrice', 0.01, 99.99, 0.01) ?>
     <?= err('productPrice') ?>
 
-    <label for="quantity">Quantity</label>
-    <?= html_number('productQuantity',1,99,1) ?>
+    <label for="productQuantity">Quantity</label>
+    <?= html_number('productQuantity', 1, 99, 1) ?>
     <?= err('productQuantity') ?>
 
-    <label for="status">Status</label>
-    <?= html_select('productStatus',['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
+    <label for="productStatus">Status</label>
+    <?= html_select('productStatus', ['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
     <?= err('productStatus') ?>
 
-    <label for="sales">Sales Count</label>
-    <?= html_number('salesCount',1,99,1) ?>
+    <label for="salesCount">Sales Count</label>
+    <?= html_number('salesCount', 1, 99, 1) ?>
     <?= err('salesCount') ?>
 
     <label for="photo">Photo</label>
     <label class="upload" tabindex="0">
         <?= html_file('photo', 'image/*', 'hidden') ?>
-        <img src="/images/photo.jpg">
+        <?php
+            $photo = $GLOBALS['photo'] ?? 'photo.jpg';
+            echo "<img src='/images/" . htmlspecialchars($photo) . "' alt='Product Photo'>";
+        ?>
     </label>
     <?= err('photo') ?>
 
@@ -175,5 +179,6 @@ include '../header.php';
         <button type="reset">Reset</button>
     </section>
 </form>
+
 <?php
 include '../footer.php';

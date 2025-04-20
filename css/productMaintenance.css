@@ -1,0 +1,94 @@
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.table th, .table td {
+    border: 1px solid #d3d3d3;
+    padding: 12px 15px;
+    text-align: center;
+}
+
+.table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.popup {
+    width: 100px;
+    height: 100px;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+p {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+}
+
+label.upload img{
+    display:block;
+    border: 1px solid #333;
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/*Sorting*/
+.table th a{
+    color:inherit;
+    display: block;
+}
+
+.table th a.asc::after{
+    content:' ▴';
+}
+
+.table th a.desc::after{
+    content:' ▾';
+}
+
+/*Paging*/
+nav.pager{
+    padding: 0;
+    background:transparent;
+}
+
+nav.pager a{
+    outline: 1px solid #333;
+}
+
+nav.pager a.active{
+    background:#333;
+}
+
+nav {
+    padding: 0 50px;
+    background: #999;
+    display: flex;
+}
+
+nav a {
+    padding: 5px 10px;
+    color: #fff;
+    background: #666;
+    text-decoration: none;
+    white-space: nowrap;
+}

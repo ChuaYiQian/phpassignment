@@ -132,6 +132,11 @@ function html_text($key, $attr = '') {
     echo "<input type='text' id='$key' name='$key' value='$value' $attr>";
 }
 
+function html_hidden($key) {
+    $value = encode($GLOBALS[$key] ?? '');
+    echo "<input type='hidden' name='$key' value='$value'>";
+}
+
 // Generate <input type='number'>
 function html_number($key, $min = '', $max = '', $step = '', $attr = '') {
     $value = encode($GLOBALS[$key] ?? '');
@@ -166,6 +171,30 @@ function err($key) {
     }
     else {
         echo '<span></span>';
+    }
+}
+
+function html_search($key, $attr = '') {
+    $value = encode($GLOBALS[$key] ?? '');
+    echo "<input type='search' id='$key' name='$key' value='$value' $attr>";
+}
+
+function table_headers($fields, $sort, $dir, $href = '', $sortable = []) {
+    foreach ($fields as $k => $v) {
+        if (!in_array($k, $sortable)) {
+            echo "<th>$v</th>"; // plain header, not sortable
+            continue;
+        }
+        $d = 'asc'; // Default direction
+        $c = '';    // Default class
+        
+        // TODO
+        if($k == $sort){
+            $d = $dir == 'asc' ? 'desc' : 'asc';
+            $c = $dir;
+        }
+
+        echo "<th><a href='?sort=$k&dir=$d&$href' class='$c'>$v</a></th>";
     }
 }
 ?>

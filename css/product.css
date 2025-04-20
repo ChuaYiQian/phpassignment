@@ -53,3 +53,23 @@
     cursor: pointer;
     font-size: 18px;
 }
+
+.page-wrapper {
+    display: flex;
+    padding: 20px;
+}
+
+.sidebar {
+    width: 220px;
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-right: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+.overlay-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
