@@ -19,7 +19,7 @@ $arr = $_db->query('SELECT * FROM product')->fetchAll(); ?>
         <h1 class="product-title"><?= $p->productName ?></h1>
         <p class="product-price">RM<?= $p->productPrice ?></p>
         <p class="product-description"><?= $p->productDescription ?></p>
-        <button class="buy-button">Buy Now</button>
+        <button class="buy-button">Buy Now</button>        
     </div>
     <?php endforeach ?>
 </div>
