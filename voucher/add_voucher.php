@@ -2,14 +2,13 @@
 include '../base.php'; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Collect input data
     $voucherCode = $_POST['code'];
     $discountRate = $_POST['discount'];
-    $startDate = date('Y-m-d'); // Default to today
+    $startDate = date('Y-m-d'); 
 
     // Set endDate to a default value if expiry_date is empty
     if (empty($_POST['expiry_date'])) {
-        $endDate = date('Y-m-d', strtotime('+1 year')); // Default to one year from today
+        $endDate = date('Y-m-d', strtotime('+1 year')); 
     } else {
         $endDate = $_POST['expiry_date'];
     }
@@ -22,13 +21,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Generate the new ID
     if ($lastID) {
-        $number = (int) substr($lastID, 1);  // Get the number part
-        $newID = 'v' . str_pad($number + 1, 3, '0', STR_PAD_LEFT);  // Increment and pad with zeros
+        $number = (int) substr($lastID, 1); 
+        $newID = 'v' . str_pad($number + 1, 3, '0', STR_PAD_LEFT);  
     } else {
-        $newID = 'v001';  // Starting ID
+        $newID = 'v001';  
     }
 
-    // Prepare SQL query for inserting a new voucher
     $sql = "INSERT INTO voucher (voucherID, voucherCode, startDate, endDate, discountRate, voucherStatus) 
             VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -55,7 +53,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <h2>Add New Voucher</h2>
 
-<!-- Form to add a new voucher -->
 <form method="POST">
     <label>Code: <input type="text" name="code" required></label><br>
     <label>Discount: <input type="number" name="discount" step="0.01" required></label><br>

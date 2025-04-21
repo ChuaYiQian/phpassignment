@@ -46,3 +46,5 @@ foreach ($selectedIDs as $productID) {
 
 echo "</ul>";
 echo "<h3>Total Price: RM" . number_format($total, 2) . "</h3>";
+
+header("Location: /payment.php");
