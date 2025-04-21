@@ -23,6 +23,12 @@
 
                 </li>
                 <li>
+                    <a href="/order/userOrder.php">
+                        <img src="/images/orderIcon.jpg" style="width: 30px; height: 30px;">
+                    </a>
+
+                </li>
+                <li>
                     <form action="/logout.php" method="POST" style="display:inline;">
                         <button type="submit" class="login-btn">Logout</button>
                     </form>
@@ -34,7 +40,6 @@
     </nav>
 </header>
 
-<!-- Login Popup -->
 <div id="loginPopup" class="popup" style="z-index: 99;">
     <div class="popup-content">
         <span class="close" onclick="closeLoginPopup()">&times;</span>
