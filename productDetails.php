@@ -8,10 +8,12 @@ $stm = $_db->prepare('
 $stm->execute([$id]);
 $product = $stm->fetch();
 
-if (!$product) {
-    echo "<p>Product not found.</p>";
+if (!$product || $product->productStatus !== 'available') {
+    echo "<p>Product not found or unavailable.</p>";
+    include 'footer.php';
     exit;
 }
+
 ?>
 
 <!DOCTYPE html>
