@@ -36,21 +36,19 @@ if (!empty($cart)) {
 }
 
 /* Navigate to external web */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $amount = $_POST['amount'];
-    $payment_method = $_POST['payment_method'];
-    $selected_bank = $_POST['bank'] ?? '';
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//    $amount = $_POST['amount'];
+//    $payment_method = $_POST['payment_method'];
+//    $selected_bank = $_POST['bank'] ?? '';
 
-    if ($payment_method === 'fpx' && $selected_bank === 'HongLeong') {
+//    if ($payment_method === 'fpx' && $selected_bank === 'HongLeong') {
 
         // Redirect user to HLB payment page
-        header("Location: https://www.hlbepay.com.my/HLB-ePayment/logonDisplay");
-        exit;
-    }
+     //   header("Location: https://www.hlbepay.com.my/HLB-ePayment/logonDisplay");
+    //    exit;
+  //  }
 
-}
-
-
+//}
 ?>
 
 <!DOCTYPE html>
@@ -61,9 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="/css/payment.css">
 </head>
 <body>
-
 <h2>Checkout</h2>
-
 <div class="container">
     <div class="cart-section">
         <table>
@@ -117,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h3>Total: RM<?= number_format($finalTotal, 2) ?></h3>
         </div>
 
-        <form method="POST" action="submit_payment.php">
+        <form id="payment-form" method="POST" action="submit_payment.php">
             <input type="hidden" name="amount" value="<?= $finalTotal ?>">
 
             <div class="payment-methods">
@@ -185,23 +181,52 @@ function toggleFields(method) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    const methodRadios = document.querySelectorAll('input[name="payment-method"]');
-    const cardFields = document.querySelector(".card-fields");
-    const bankList = document.querySelector(".bank-list");
+    const methodRadios = document.querySelectorAll('input[name="payment_method"]');
+    const cardFields = document.getElementById('card-details');
+    const bankList = document.getElementById('bank-list');
+
+    // Hide all by default
+    cardFields.style.display = "none";
+    bankList.style.display = "none";
 
     methodRadios.forEach(radio => {
         radio.addEventListener("change", function () {
-            // Hide all by default
-            cardFields.style.display = "none";
-            bankList.style.display = "none";
-
-            // Show based on selected method
-            if (this.value === "card") {
-                cardFields.style.display = "block";
-            } else if (this.value === "bank") {
-                bankList.style.display = "block";
-            }
+            toggleFields(this.value);
         });
+    });
+
+    // Form validation
+    const form = document.getElementById("payment-form");
+    form.addEventListener("submit", function (e) {
+        const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+        if (!selectedPayment) {
+            alert("Please select a payment method.");
+            e.preventDefault();
+            return;
+        }
+
+        const method = selectedPayment.value;
+
+        if (method === "card") {
+            const cardNumber = document.querySelector('input[name="card_number"]').value.trim();
+            const expiry = document.querySelector('input[name="card_expiry"]').value.trim();
+            const cvv = document.querySelector('input[name="card_cvv"]').value.trim();
+
+            if (!cardNumber || !expiry || !cvv) {
+                alert("Please fill in all card details.");
+                e.preventDefault();
+                return;
+            }
+        }
+
+        if (method === "fpx") {
+            const selectedBank = document.querySelector('input[name="bank"]:checked');
+            if (!selectedBank) {
+                alert("Please select a bank for FPX payment.");
+                e.preventDefault();
+                return;
+            }
+        }
     });
 });
 </script>
