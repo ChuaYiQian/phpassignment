@@ -27,7 +27,7 @@ if ($productName !== '') {
     $params[] = "%$productName%";
 }
 
-$sql = 'SELECT * FROM product WHERE productStatus = "available"';
+$sql = 'SELECT * FROM product WHERE productStatus = "Y"';
 if ($where) {
     $sql .= ' AND ' . implode(' AND ', $where);
 }
@@ -74,18 +74,26 @@ $arr = $stm->fetchAll();
             </form>
         </aside>
         <div class="product-grid">
-    <?php foreach ($arr as $p): ?>
-        <div class="product-container">
-            <a href="productDetails.php?id=<?= $p->productID ?>" class="overlay-link">
-            <img src="/images/<?= $p->productPicture ?>" class="product-image">
-            <h1 class="product-title"><?= $p->productName ?></h1>
-            <p class="product-price">RM<?= $p->productPrice ?></p>
-            <p class="product-description"><?= $p->productDescription ?></p>
-            </a>
-            <button class="buy-button">Add To Cart</button>
+            <?php foreach ($arr as $p): ?>
+                <div class="product-container">
+                    <a href="productDetails.php?id=<?= $p->productID ?>" class="overlay-link">
+                        <img src="/images/<?= $p->productPicture ?>" class="product-image">
+                        <h1 class="product-title"><?= $p->productName ?></h1>
+                        <p cla0ss="product-price">RM<?= $p->productPrice ?></p>
+                        <p class="product-description"><?= $p->productDescription ?></p>
+                    </a>00
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <form action="/cartItem/addCartItem.php" method="POST">
+                            <input type="hidden" name="userID" value="<?= $_SESSION['user_id']?>">
+                            <input type="hidden" name="productID" value="<?= $p->productID?>">
+                            <button type="submit" class="buy-button">Add To Cart</button>
+                        </form>
+                    <?php else: ?>
+                        <button class="buy-button" onclick="openLoginPopup()">Add To Cart</button>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach ?>
         </div>
-    <?php endforeach ?>
-</div>
 
     </div>
 
