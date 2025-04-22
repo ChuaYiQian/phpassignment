@@ -12,27 +12,40 @@ $shippingFee = 5.00;
 
 if (isset($_POST['apply_voucher'])) {
     $code = $_POST['voucher_code'] ?? '';
+
     $stmt = $conn->prepare("SELECT * FROM voucher WHERE voucherCode = ? AND voucherStatus = 'Active' AND startDate <= CURDATE() AND endDate >= CURDATE()");
     $stmt->bind_param("s", $code);
     $stmt->execute();
     $voucher = $stmt->get_result()->fetch_assoc();
 
     if ($voucher) {
-        $voucherID = $voucher['voucherID'];
-        $discount = floatval($voucher['discountRate']);
-        $voucherMsg = "Voucher applied: {$discount}% off";
-        $_SESSION['voucherID'] = $voucherID;
-        $_SESSION['discount'] = $discount;
+        $_SESSION['voucherID'] = $voucher['voucherID'];
+        $_SESSION['voucherCode'] = $voucher['voucherCode'];
+        $_SESSION['discount'] = floatval($voucher['discountRate']);
+        header("Location: payment.php"); // To avoid resubmission and clear messages
+        exit;
     } else {
-        $voucherMsg = "Invalid or expired voucher code.";
+        // Store the invalid voucher message in the session
+        $_SESSION['voucherError'] = "Invalid or expired voucher code.";
+        unset($_SESSION['voucherID'], $_SESSION['voucherCode'], $_SESSION['discount']);
+        header("Location: payment.php"); // Refresh the page after reload
+        exit;
     }
 }
+
+if (isset($_POST['remove_voucher'])) {
+    unset($_SESSION['voucherID'], $_SESSION['voucherCode'], $_SESSION['discount']);
+    header("Location: payment.php"); // Refresh the page after removal
+    exit;
+}
+
+$discount = $_SESSION['discount'] ?? 0;
 
 $productIDs = implode(',', array_keys($cart));
 $products = [];
 if (!empty($cart)) {
-    $sql = "SELECT * FROM product WHERE productID IN ($productIDs)";
-    $products = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
+    $sql = "SELECT * FROM cartitem WHERE productID IN ($productIDs)";
+    $products = $conn->query($sql)->fetch_all();
 }
 
 /* Navigate to external web */
@@ -89,28 +102,41 @@ if (!empty($cart)) {
             </tbody>
         </table>
 
+        <!-- VOUCHER -->
         <div class="voucher-box">
-            <form method="POST">
-                <label>Voucher Code:</label>
-                <input type="text" name="voucher_code">
-                <button type="submit" name="apply_voucher">Apply</button>
-            </form>
-            <p style="color: green;"><?= $voucherMsg ?></p>
+            <?php if (isset($_SESSION['voucherID'], $_SESSION['discount'], $_SESSION['voucherCode'])): ?>
+                <p style="color: green;">
+                    Applied Voucher: <?= $_SESSION['voucherID'] ?> (<?= $_SESSION['voucherCode'] ?>) – <?= $_SESSION['discount'] ?>% off
+                </p>
+                <form method="POST">
+                    <button type="submit" name="remove_voucher">Remove Voucher</button>
+                </form>
+            <?php else: ?>
+                <form method="POST">
+                    <label>Voucher Code:</label>
+                    <input type="text" name="voucher_code" required>
+                    <button type="submit" name="apply_voucher">Apply</button>
+                </form>
+                <?php if (isset($_SESSION['voucherError'])): ?>
+                    <p style="color: red;"><?= $_SESSION['voucherError'] ?></p>
+                    <?php unset($_SESSION['voucherError']); ?> <!-- Clear the error message after displaying it -->
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
-    </div>
 
     <!-- PAYMENT -->
         <?php
+            $discount = $_SESSION['discount'] ?? 0;
             $discountAmount = $total * ($discount / 100);
             $taxAmount = $total * $taxRate;
             $finalTotal = $total - $discountAmount + $taxAmount + $shippingFee;
         ?>
         <div class="summary">
             <p>Subtotal: RM<?= number_format($total, 2) ?></p>
-            <p>Discount: -RM<?= number_format($discountAmount, 2) ?></p>
+            <p>Discount: -RM<?= number_format($discountAmount, 2) ?></p> 
             <p>Tax (6%): RM<?= number_format($taxAmount, 2) ?></p>
             <p>Shipping: RM<?= number_format($shippingFee, 2) ?></p>
-            <h3>Total: RM<?= number_format($finalTotal, 2) ?></h3>
+            <h3>Total: RM<?= number_format($finalTotal, 2) ?></h3> 
         </div>
 
         <form id="payment-form" method="POST" action="submit_payment.php">
