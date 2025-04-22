@@ -13,7 +13,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $endDate = $_POST['expiry_date'];
     }
 
-    $voucherStatus = "Active"; 
+    // Determine voucher status based on expiry date
+    $today = date('Y-m-d');
+    if (strtotime($endDate) < strtotime($today)) {
+        $voucherStatus = "Expired";
+    } else {
+        $voucherStatus = "Active";
+    }
 
     // Generate the new voucherID
     $result = $conn->query("SELECT voucherID FROM voucher ORDER BY voucherID DESC LIMIT 1");
