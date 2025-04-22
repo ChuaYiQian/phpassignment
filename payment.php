@@ -38,20 +38,20 @@ if (isset($_POST['apply_voucher'])) {
         $_SESSION['voucherID'] = $voucher['voucherID'];
         $_SESSION['voucherCode'] = $voucher['voucherCode'];
         $_SESSION['discount'] = floatval($voucher['discountRate']);
-        header("Location: payment.php"); // To avoid resubmission and clear messages
+        header("Location: payment.php"); 
         exit;
     } else {
         // Store the invalid voucher message in the session
         $_SESSION['voucherError'] = "Invalid or expired voucher code.";
         unset($_SESSION['voucherID'], $_SESSION['voucherCode'], $_SESSION['discount']);
-        header("Location: payment.php"); // Refresh the page after reload
+        header("Location: payment.php");
         exit;
     }
 }
 
 if (isset($_POST['remove_voucher'])) {
     unset($_SESSION['voucherID'], $_SESSION['voucherCode'], $_SESSION['discount']);
-    header("Location: payment.php"); // Refresh the page after removal
+    header("Location: payment.php"); 
     exit;
 }
 
@@ -89,9 +89,9 @@ $discount = $_SESSION['discount'] ?? 0;
                 <tr>
                     <th>Image</th>
                     <th>Product</th>
-                    <th class="price">Price(RM)</th>
+                    <th class="price">Price</th>
                     <th>Qty</th>
-                    <th class="price">Subtotal(RM)</th>
+                    <th class="price">Subtotal</th>
                 </tr>
             </thead>
             <tbody>
