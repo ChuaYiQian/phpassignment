@@ -27,10 +27,18 @@ $arr = $_db->query('SELECT * FROM product ORDER BY salesCount DESC LIMIT 5')->fe
         <button class="prev" onclick="moveSlide(-1)">&#10094;</button>
         <div class="slider">
             <?php foreach ($arr as $p): ?>
-                <div class="slide"><img src="/images/<?= $p->productPicture ?>">
-                    <p><?= $p->productName ?></p>
-                    <p>RM <?= $p->productPrice ?></p>
-                </div>
+                <?php
+                $images = explode(',', $p->productPicture);
+                $firstImage = $images[0];
+                ?>
+                    <div class="slide">
+                        <a href="productDetails.php?id=<?= $p->productID ?>" class="slide-link">
+                        <img src="/images/<?= $firstImage ?>" alt="<?= htmlspecialchars($p->productName) ?>">
+                        <p><?= htmlspecialchars($p->productName) ?></p>
+                        <p>RM <?= number_format($p->productPrice, 2) ?></p>
+                        <a href="productDetails.php?id=<?= $p->productID ?>"></a>
+                    </div>
+                
             <?php endforeach ?>
         </div>
         <button class="next" onclick="moveSlide(1)">&#10095;</button>

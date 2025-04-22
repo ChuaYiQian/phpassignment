@@ -73,4 +73,25 @@ $(() => {
         }
     });
 
+$(document).ready(function () {
+    $('input[type="file"]').on('change', function () {
+        const count = this.files.length;
+        let label = 'No files selected';
+
+        if (count === 1) {
+            label = '1 file selected';
+        } else if (count > 1) {
+            label = `${count} files selected`;
+        }
+
+        // Append or update the file count message
+        if ($('#file-count-msg').length) {
+            $('#file-count-msg').text(label);
+        } else {
+            $('<p id="file-count-msg" style="margin-top: 0.5rem; color: #333;"></p>')
+                .text(label)
+                .insertAfter($(this).closest('label.upload'));
+        }
+    });
+});
 });

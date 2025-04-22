@@ -1,22 +1,33 @@
 <?php
 include '../base.php';
+session_start();
+
+if ($msg = temp('info')) {
+    echo "<div class='success-message'>$msg</div>";
+} elseif ($msg = temp('error')) {
+    echo "<div class='error-message'>$msg</div>";
+}
 
 //For Searching and Sorting
 $id = req('productID');
 $name = req('productName');
 $status = req('productStatus');
+$categoryID = req('productCategory');
+
+$categories = $_db->query("SELECT * FROM category")->fetchAll();
 
 //Table name
 $fields = [
     'productID' => 'Id',
     'productName' => 'Name',
-    'categoryID' => 'Category',
+    'categoryName' => 'Category',
     'productPrice' => 'Price',
     'productPicture' => 'Picture',
     'productDescription' => 'Description',
     'productQuantity' => 'Quantity',
     'productStatus' => 'Status',
-    'salesCount' => 'Sales Count'
+    'salesCount' => 'Sales Count',
+    'createdDate' => 'Created Date'
 ];
 
 //Only need to sorting
@@ -44,6 +55,10 @@ if ($status !== '') {
     $where[] = 'productStatus = ?';
     $params[] = $status;
 }
+if ($categoryID !== '') {
+    $where[] = 'p.categoryID = ?';
+    $params[] = $categoryID;
+}
 
 $where_sql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
@@ -51,7 +66,7 @@ $where_sql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 $page = req('page', 1);
 require_once '../lib/SimplePager.php';
 
-$p = new SimplePager("SELECT * FROM product $where_sql ORDER BY $sort $dir", $params, 10, $page);
+$p = new SimplePager("SELECT p.*, c.categoryName FROM product p LEFT JOIN category c ON p.categoryID = c.categoryID $where_sql ORDER BY $sort $dir", $params, 10, $page);
 $arr = $p->result;
 ?>
 
@@ -69,7 +84,11 @@ $arr = $p->result;
     Category:
     <select name="productCategory">
         <option value="">All</option>
-        //asda
+        <?php foreach ($categories as $c): ?>
+            <option value="<?= $c->categoryID ?>" <?= req('productCategory') === $c->categoryID ? 'selected' : '' ?>>
+                <?= $c->categoryName ?>
+            </option>
+        <?php endforeach ?>
     </select>
     Status:
     <select name="productStatus">
@@ -81,7 +100,7 @@ $arr = $p->result;
 </form>
 <table class="table">
     <tr>
-        <th colspan="10" style="font-size: 25px;background-color:rgba(0, 0, 0, 0.11);">Product Table</th>
+        <th colspan="11" style="font-size: 25px;background-color:rgba(0, 0, 0, 0.11);">Product Table</th>
     </tr>
     <tr>
         <?= table_headers($fields, $sort, $dir, "page=$page", $sortable) ?>
@@ -91,13 +110,21 @@ $arr = $p->result;
         <tr>
             <td><?= $prod->productID ?></td>
             <td><?= $prod->productName ?></td>
-            <td><?= $prod->categoryID ?></td>
+            <td><?= $prod->categoryName ?></td>
             <td>RM <?= $prod->productPrice ?></td>
-            <td><img src="/images/<?= $prod->productPicture ?>" class="popup"></td>
+            <td>
+                <?php
+                $photos = explode(',', $prod->productPicture);
+                foreach ($photos as $photo):
+                    ?>
+                    <img src="/images/<?= trim($photo) ?>" class="popup" style="width: 60px; height: auto; margin: 3px;">
+                <?php endforeach; ?>
+            </td>
             <td><?= $prod->productDescription ?></td>
             <td><?= $prod->productQuantity ?></td>
             <td><?= $prod->productStatus ?></td>
             <td><?= $prod->salesCount ?></td>
+            <td><?= $prod->createdDate ?></td>
             <td>
                 <a href="/product/updateProduct.php?id=<?= $prod->productID ?>">Update</a>
                 <a href="/product/deleteProduct.php?id=<?= $prod->productID ?>"

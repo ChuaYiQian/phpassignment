@@ -27,7 +27,7 @@ if ($productName !== '') {
     $params[] = "%$productName%";
 }
 
-$sql = 'SELECT * FROM product WHERE productStatus = "Y"';
+$sql = 'SELECT * FROM product WHERE productStatus = "Available"';
 if ($where) {
     $sql .= ' AND ' . implode(' AND ', $where);
 }
@@ -81,7 +81,7 @@ $arr = $stm->fetchAll();
                         <h1 class="product-title"><?= $p->productName ?></h1>
                         <p cla0ss="product-price">RM<?= $p->productPrice ?></p>
                         <p class="product-description"><?= $p->productDescription ?></p>
-                    </a>00
+                    </a>
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <form action="/cartItem/addCartItem.php" method="POST">
                             <input type="hidden" name="userID" value="<?= $_SESSION['user_id']?>">
