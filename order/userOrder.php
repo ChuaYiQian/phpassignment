@@ -110,7 +110,7 @@ function formatDate($dateStr) {
                         <button type="submit">Cancel Order</button>
                     </form>
                 <?php elseif ($order['orderStatus'] === 'completed'): ?>
-                    <form method="get" action="receipt.php" style="display:inline;">
+                    <form method="get" action="/order/orderDetail.php" style="display:inline;">
                         <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
                         <button type="submit">View Receipt</button>
                     </form>
