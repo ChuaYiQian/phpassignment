@@ -61,7 +61,7 @@ body {
     transition: none 0s;
 }
 
-/*--*/
+/*-Slide-*/
 .slider-container {
     display: flex;
     overflow: hidden;
@@ -69,20 +69,34 @@ body {
     margin: auto;
     position: relative;
 }
+
 .slider {
     display: flex;
     transition: transform 0.5s ease-in-out;
 }
+
 .slide {
     min-width: 25%;
     box-sizing: border-box;
     padding: 10px;
     text-align: center;
 }
+
 .slide img {
     width: 100%;
+    height: 400px;
+    object-fit: cover;
     border-radius: 10px;
 }
+
+.slide-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 .prev, .next {
     position: absolute;
     top: 50%;
@@ -94,5 +108,6 @@ body {
     cursor: pointer;
     z-index: 10;
 }
+
 .prev { left: 30px; }
 .next { right:30px; }

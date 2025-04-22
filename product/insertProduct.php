@@ -1,5 +1,6 @@
 <?php
 include '../base.php';
+session_start();
 
 // ----------------------------------------------------------------------------
 
@@ -12,7 +13,35 @@ if (is_post()) {
     $productQuantity = req('productQuantity');
     $productStatus = req('productStatus');
     $salesCount = req('salesCount');
-    $f = get_file('photo');
+    $photos = $_FILES['photo'];
+    $validPhotos = [];
+    $uploadDir = '../images/';
+
+    //for photos
+    for ($i = 0; $i < count($photos['name']); $i++) {
+        $name = basename($photos['name'][$i]);
+        $type = $photos['type'][$i];
+        $tmp_name = $photos['tmp_name'][$i];
+        $size = $photos['size'][$i];
+
+        if (!str_starts_with($type, 'image/')) {
+            $_err['photo'] = 'All files must be images';
+            break;
+        } else if ($size > 1 * 1024 * 1024) {
+            $_err['photo'] = 'Each file must be under 1MB';
+            break;
+        }
+
+        if (move_uploaded_file($tmp_name, "$uploadDir/$name")) {
+            $validPhotos[] = $name;
+        }
+    }
+
+    // Validate: product picture
+    if (empty($validPhotos)) {
+        $_err['photo'] = 'At least one photo is required.';
+    }
+
 
     // Validate: product id
     if ($productID == '') {
@@ -80,39 +109,43 @@ if (is_post()) {
         $_err['salesCount'] = 'Must between 1 - 99';
     }
 
-    // Validate: photo (file)
-    if (!$f) {
-        $_err['photo'] = 'Required';
-    } else if (!str_starts_with($f->type, 'image/')) {
-        $_err['photo'] = 'Must be image';
-    } else if ($f->size > 1 * 1024 * 1024) {
-        $_err['photo'] = 'Maximum 1MB';
-    }
-
     if (empty($_err)) {
         try {
-            move_uploaded_file($f->tmp_name, "uploads/$f->name");
-            $photo = save_photo($f, '../images');
-            $stm = $_db->prepare('
-                INSERT INTO product (productID, productName, productDescription, productPrice, productPicture, productQuantity, productStatus, salesCount, categoryID)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ');
+            $photoString = implode(',', $validPhotos);
 
-            $stm->execute([$productID, $productName, $productDescription, $productPrice, $photo, $productQuantity, $productStatus, $salesCount, $categoryID]);
+            $stm = $_db->prepare('
+            INSERT INTO product (
+                productID, productName, productDescription, productPrice,
+                productPicture, productQuantity, productStatus, salesCount, categoryID
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ');
+
+            $stm->execute([
+                $productID,
+                $productName,
+                $productDescription,
+                $productPrice,
+                $photoString,
+                $productQuantity,
+                $productStatus,
+                $salesCount,
+                $categoryID
+            ]);
 
             temp('info', 'Record inserted successfully');
             header('Location: /product/productMaintenance.php');
-
+            exit();
         } catch (PDOException $e) {
             die("Error inserting data: " . $e->getMessage());
         }
     }
+
 }
 
 // ----------------------------------------------------------------------------
 
 $_title = 'Product | Insert';
-include '../header.php';
+//include '../header.php';
 ?>
 <link rel="stylesheet" href="/css/insertproduct.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -155,7 +188,7 @@ include '../header.php';
 
     <label for="photo">Photo</label>
     <label class="upload">
-        <?= html_file('photo', 'image/*', 'hidden') ?>
+        <?= html_file('photo[]', 'image/*', 'hidden multiple') ?>
         <img src="/images/photo.jpg">
     </label>
     <?= err('photo') ?>
@@ -166,4 +199,4 @@ include '../header.php';
     </section>
 </form>
 <?php
-include '../footer.php';
+//include '../footer.php';

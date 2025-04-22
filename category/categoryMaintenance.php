@@ -1,7 +1,15 @@
 <?php
 include '../base.php';
+session_start();
+
+if ($msg = temp('info')) {
+    echo "<div class='success-message'>$msg</div>";
+} elseif ($msg = temp('error')) {
+    echo "<div class='error-message'>$msg</div>";
+}
 
 $arr = $_db->query('SELECT * FROM category')->fetchAll();
+
 
 ?>
 
@@ -18,7 +26,7 @@ $arr = $_db->query('SELECT * FROM category')->fetchAll();
     <tr>
         <th>Category</th>
         <th>Name</th>
-        <th>Status</th>
+        <th>Created Date</th>
         <th></th>
     </tr>
 
@@ -26,7 +34,7 @@ $arr = $_db->query('SELECT * FROM category')->fetchAll();
     <tr>
         <td><?= $p->categoryID ?></td>
         <td><?= $p->categoryName ?></td>
-        <td><?= $p->categoryStatus ?></td>
+        <td><?= $p->createdDate ?></td>
         <td>
             <a href="/category/updateCategory.php?id=<?= $p->categoryID ?>">Update</a>
             <a href="/category/deleteCategory.php?id=<?= $p->categoryID ?>" onclick="return confirm('Delete this category?')">Delete</a>

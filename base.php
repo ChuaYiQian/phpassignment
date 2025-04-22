@@ -7,11 +7,11 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
 
 
 // Global PDO object
-$_db = new PDO('mysql:host=localhost;port=4306;dbname=assignment', 'root', '', [
+$_db = new PDO('mysql:host=localhost;port=3306;dbname=assignment', 'root', '', [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
 ]);
 
-$host = "localhost:4306";   
+$host = "localhost:3306";   
 $user = "root";        
 $password = ""; 
 $database = "assignment";
@@ -188,7 +188,6 @@ function table_headers($fields, $sort, $dir, $href = '', $sortable = []) {
         $d = 'asc'; // Default direction
         $c = '';    // Default class
         
-        // TODO
         if($k == $sort){
             $d = $dir == 'asc' ? 'desc' : 'asc';
             $c = $dir;

@@ -2,9 +2,7 @@
 <?php include 'base.php';
 
 $id = req('id');
-$stm = $_db->prepare('
-                SELECT * FROM product WHERE productID = ?
-            ');
+$stm = $_db->prepare('SELECT * FROM product WHERE productID = ?');
 $stm->execute([$id]);
 $product = $stm->fetch();
 
@@ -14,6 +12,7 @@ if (!$product || $product->productStatus !== 'available') {
     exit;
 }
 
+$images = explode(',', $product->productPicture);
 ?>
 
 <!DOCTYPE html>
@@ -23,14 +22,31 @@ if (!$product || $product->productStatus !== 'available') {
     <meta charset="UTF-8">
     <title><?= $product->productName ?> - Details</title>
     <link rel="stylesheet" href="/css/productDetails.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/productDetails.js" defer></script>
 </head>
 
 <body>
     <div class="product-detail-container">
-        <img src="/images/<?= $product->productPicture ?>" class="detail-image">
+        <?php if (count($images) > 1): ?>
+            <div class="detail-slider">
+                <button class="slider-btn prev" onclick="moveDetailSlide(-1)">&#10094;</button>
+                <div class="detail-slides-wrapper">
+                    <div class="detail-slides" id="detailSlider">
+                        <?php foreach ($images as $img): ?>
+                            <img src="/images/<?= trim($img) ?>" class="detail-slide-image">
+                        <?php endforeach ?>
+                    </div>
+                </div>
+                <button class="slider-btn next" onclick="moveDetailSlide(1)">&#10095;</button>
+            </div>
+        <?php else: ?>
+            <img src="/images/<?= trim($images[0]) ?>" class="detail-image">
+        <?php endif; ?>
+
         <div class="product-info">
             <h1><?= $product->productName ?></h1>
-            <p class="detail-price">RM<?= $product->productPrice ?></p>
+            <p class="detail-price">RM<?= number_format($product->productPrice, 2) ?></p>
             <p class="detail-description"><?= $product->productDescription ?></p>
             <form action="/cartItem/addCartItem.php" method="post">
                 <input type="number" name="newQuantity" value="1" min="1" max="99">
@@ -40,7 +56,6 @@ if (!$product || $product->productStatus !== 'available') {
             </form>
         </div>
     </div>
-
 </body>
 
 </html>

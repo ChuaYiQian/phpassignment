@@ -1,12 +1,12 @@
 <?php
 include '../base.php';
+session_start();
 
 // ----------------------------------------------------------------------------
 
 if (is_post()) {
     $categoryID = req('categoryID');
     $categoryName = req("categoryName");
-    $categoryStatus  = req('categoryStatus');
 
     // Validate: product id
     if ($categoryID == '') {
@@ -27,22 +27,14 @@ if (is_post()) {
         $_err['categoryName'] = 'Maximum 100 characters';
     }
 
-    // Validate: status
-    if (!$categoryStatus) {
-        $_err['categoryStatus'] = 'Required';
-    } 
-    else if (!in_array($categoryStatus, ['available', 'unavailable'])) {
-        $_err['categoryStatus'] = 'Invalid selection';
-    }
-
     if (empty($_err)) {
         try {
             $stm = $_db->prepare('
-                INSERT INTO category (categoryID, categoryName, categoryStatus)
-                VALUES (?, ?, ?)
+                INSERT INTO category (categoryID, categoryName)
+                VALUES (?, ?)
             ');
     
-            $stm->execute([$categoryID, $categoryName, $categoryStatus]);
+            $stm->execute([$categoryID, $categoryName]);
     
             temp('info', 'Record inserted successfully');
             header('Location: /category/categoryMaintenance.php');
@@ -62,16 +54,12 @@ include '../header.php';
 
 <form method="post" class="form" enctype="multipart/form-data" novalidate>
     <label for="id">Category ID</label>
-    <?= html_text('categoryID', 'maxlength="4" placeholder="P999" data-upper') ?>
+    <?= html_text('categoryID', 'maxlength="4" placeholder="C999" data-upper') ?>
     <?= err('categoryID') ?>
 
     <label for="name">Name</label>
     <?= html_text('categoryName', 'maxlength="100"') ?>
     <?= err('categoryName') ?>
-
-    <label for="status">Status</label>
-    <?= html_select('categoryStatus',['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
-    <?= err('categoryStatus') ?>
 
     <section>
         <button>Submit</button>

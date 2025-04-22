@@ -1,5 +1,6 @@
 <?php
 include '../base.php';
+session_start();
 
 // ----------------------------------------------------------------------------
 $categoryID = $_GET['id'];
@@ -30,21 +31,13 @@ if (is_post()) {
         $_err['categoryName'] = 'Maximum 100 characters';
     }
 
-    // Validate: status
-    if (!$categoryStatus) {
-        $_err['categoryStatus'] = 'Required';
-    } 
-    else if (!in_array($categoryStatus, ['available', 'unavailable'])) {
-        $_err['categoryStatus'] = 'Invalid selection';
-    }
-
     if (empty($_err)) {
         try {
             $stm = $_db->prepare('
-                UPDATE category SET categoryName=?, categoryStatus=? WHERE categoryID=?
+                UPDATE category SET categoryName=? WHERE categoryID=?
             ');
     
-            $stm->execute([$categoryName, $categoryStatus, $categoryID]);
+            $stm->execute([$categoryName, $categoryID]);
     
             temp('info', 'Record updated successfully');
             header('Location: /category/categoryMaintenance.php');
@@ -69,10 +62,6 @@ include '../header.php';
     <label for="name">Name</label>
     <?= html_text('categoryName', 'maxlength="100"') ?>
     <?= err('categoryName') ?>
-
-    <label for="status">Status</label>
-    <?= html_select('categoryStatus',['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
-    <?= err('categoryStatus') ?>
 
     <section>
         <button>Submit</button>
