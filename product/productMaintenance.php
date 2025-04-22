@@ -121,7 +121,13 @@ $arr = $p->result;
                 <?php endforeach; ?>
             </td>
             <td><?= $prod->productDescription ?></td>
-            <td><?= $prod->productQuantity ?></td>
+            <td>
+                <?= $prod->productQuantity ?>
+                <?php if ($prod->productQuantity < 15)://if quantity under 15, the alert message will show ?>
+                    <span style="color: red; font-weight: bold;">(Low Stock)</span>
+                <?php endif; ?>
+            </td>
+
             <td><?= $prod->productStatus ?></td>
             <td><?= $prod->salesCount ?></td>
             <td><?= $prod->createdDate ?></td>

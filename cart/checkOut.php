@@ -13,7 +13,7 @@ $selectedItems = explode(',', $_POST['selectedItems'] ?? '');
 
 if (empty($selectedItems) || $selectedItems[0] === "") {
     $_SESSION['error'] = 'No items selected for checkout';
-    header("Location: /cart.php");
+    header("Location: /cart/cart.php");
     exit;
 }
 
@@ -29,7 +29,7 @@ try {
     $orderStmt = $_db->prepare("
         INSERT INTO `Order` 
         (orderID, userID, orderTotal, orderDate, orderStatus)
-        VALUES (?, ?, 0, CURDATE(), 'pending')
+        VALUES (?, ?, 0, CURDATE(), 'completed')
     ");
     $orderStmt->execute([$orderID, $userID]);
 
@@ -101,6 +101,6 @@ try {
     $_db->rollBack();
     error_log("Checkout Error: " . $e->getMessage());
     $_SESSION['error'] = 'Checkout failed: ' . $e->getMessage();
-    header("Location: /cart.php");
+    header("Location: /cart/cart.php");
     exit;
 }
