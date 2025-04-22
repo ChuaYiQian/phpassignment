@@ -118,7 +118,7 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC); ?>
         </div>
         <br>
         <div class="sidebar-btnsec">
-            <form method="post" action="checkout.php" id="checkout-form">
+            <form method="post" action="checkOut.php" id="checkout-form">
                 <input type="hidden" name="cartID" value="<?= $cartID ?>">
                 <input type="hidden" name="selectedItems" id="selected-items">
                 <button type="submit" id="checkout-btn" disabled>Check Out</button>
