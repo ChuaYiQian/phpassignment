@@ -7,11 +7,11 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
 
 
 // Global PDO object
-$_db = new PDO('mysql:host=localhost;port=3306;dbname=assignment', 'root', '', [
+$_db = new PDO('mysql:host=localhost;port=4306;dbname=assignment', 'root', '', [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
 ]);
 
-$host = "localhost:3306";   
+$host = "localhost:4306";   
 $user = "root";        
 $password = ""; 
 $database = "assignment";
