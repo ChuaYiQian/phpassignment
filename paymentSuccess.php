@@ -20,7 +20,6 @@ $body = "
     <p>You can now continue shopping or view your order history.</p>
 ";
 
-// Send email
 try {
     $mail = get_mail(); 
     $mail->addAddress($recipientEmail, "Customer");

@@ -1,30 +1,23 @@
 <?php
 session_start();
-include '../base.php';
+include 'base.php';
 
 $orderID = $_POST['orderID'];
-$paymentMethod = $_POST['paymentMethod'];
-
-// Optional: validate input
-if (!$orderID || !$paymentMethod) {
-    $_SESSION['error'] = 'Missing payment details.';
-    header("Location: /payment.php?orderID=" . urlencode($orderID));
-    exit;
-}
+$paymentMethod = $_POST['payment_method'];
 
 try {
     // Simulate payment success
-    $_db->prepare("UPDATE `Order` SET orderStatus = 'paid' WHERE orderID = ?")->execute([$orderID]);
+    $_db->prepare("UPDATE `order` SET orderStatus = 'paid' WHERE orderID = ?")->execute([$orderID]);
 
     // Insert payment record
     $_db->prepare("INSERT INTO payment (orderID, paymentMethod, paymentDate) VALUES (?, ?, NOW())")
         ->execute([$orderID, $paymentMethod]);
 
-    header("Location: /paymentSuccess.php?orderID=" . urlencode($orderID));
+    header("Location: paymentSuccess.php?orderID=" . urlencode($orderID));
     exit;
 } catch (PDOException $e) {
     error_log("Payment Error: " . $e->getMessage());
     $_SESSION['error'] = "Payment failed.";
-    header("Location: /paymentFailed.php?orderID=" . urlencode($orderID));
+    header("Location: paymentFailed.php?orderID=" . urlencode($orderID));
     exit;
 }

@@ -1,7 +1,6 @@
 <?php
 include '../base.php';
 
-// Check if ID is set
 if (!isset($_POST['id']) || empty($_POST['id'])) {
     die("Invalid voucher ID.");
 }

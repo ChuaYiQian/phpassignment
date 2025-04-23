@@ -2,7 +2,6 @@
 include 'base.php'; 
 session_start();
 
-// Define table columns for display and sorting
 $fields = [
     'voucherID'    => 'ID',
     'voucherCode'  => 'Code',
@@ -16,41 +15,33 @@ $fields = [
 $sort = $_GET['sort'] ?? 'voucherID';
 $dir = $_GET['dir'] ?? 'asc';
 
-// Ensure valid sorting field
 if (!array_key_exists($sort, $fields)) {
     $sort = 'voucherID';
 }
 
-// Ensure direction is either ASC or DESC
 $dir = ($dir === 'asc') ? 'asc' : 'desc';
 
-// Filters
 $status_filter = $_GET['status'] ?? '';
 $search_code = $_GET['search_code'] ?? '';
 
-// Prepare SQL query
 $sql = "SELECT voucherID, voucherCode, startDate, endDate, discountRate, voucherStatus FROM voucher WHERE 1=1";
 $params = [];
 $types = "";
 
-// Apply status filter
 if (!empty($status_filter)) {
     $sql .= " AND voucherStatus = ?";
     $params[] = $status_filter;
     $types .= "s";
 }
 
-// Apply search filter
 if (!empty($search_code)) {
     $sql .= " AND voucherCode LIKE ?";
     $params[] = "%$search_code%";
     $types .= "s";
 }
 
-// Add sorting
 $sql .= " ORDER BY $sort $dir";
 
-// Prepare and execute query
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
     die("SQL Error: " . $conn->error);
@@ -127,7 +118,6 @@ while ($row = $result->fetch_object()) {
     <?php endif; ?>
 </table>
 
-<!-- Add Voucher Button -->
 <a href="voucher/add_voucher.php"><button>Add Voucher</button></a>
 
 </body>

@@ -7,7 +7,6 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $id = $_GET['id'];  
 
-// Fetch existing voucher details
 $stmt = $conn->prepare("SELECT * FROM voucher WHERE voucherID = ?");
 $stmt->bind_param("s", $id);
 $stmt->execute();
@@ -24,7 +23,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $status = $_POST['status']; 
     $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : NULL; 
 
-    // Update the voucher in the database
     $sql = "UPDATE voucher SET voucherCode=?, discountRate=?, voucherStatus=?, endDate=? WHERE voucherID=?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sdsss", $code, $discount, $status, $expiry_date, $id); 
@@ -80,7 +78,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Set initial status based on the expiry date
         updateStatus();
 
-        // Event listener to update status when expiry date changes
         expiryInput.addEventListener("change", updateStatus);
     });
     </script>

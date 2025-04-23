@@ -25,12 +25,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $result = $conn->query("SELECT voucherID FROM voucher ORDER BY voucherID DESC LIMIT 1");
     $lastID = $result->fetch_row()[0];
 
-    // Generate the new ID
     if ($lastID) {
         $number = (int) substr($lastID, 1); 
-        $newID = 'V' . str_pad($number + 1, 3, '0', STR_PAD_LEFT);  
+        $newID = 'V' . str_pad($number + 1, 4, '0', STR_PAD_LEFT);  
     } else {
-        $newID = 'V001';  
+        $newID = 'V0001';  
     }
 
     $sql = "INSERT INTO voucher (voucherID, voucherCode, startDate, endDate, discountRate, voucherStatus) 
