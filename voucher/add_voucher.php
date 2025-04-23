@@ -13,7 +13,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $endDate = $_POST['expiry_date'];
     }
 
-    $voucherStatus = "Active"; 
+    // Determine voucher status based on expiry date
+    $today = date('Y-m-d');
+    if (strtotime($endDate) < strtotime($today)) {
+        $voucherStatus = "Expired";
+    } else {
+        $voucherStatus = "Active";
+    }
 
     // Generate the new voucherID
     $result = $conn->query("SELECT voucherID FROM voucher ORDER BY voucherID DESC LIMIT 1");
@@ -22,9 +28,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Generate the new ID
     if ($lastID) {
         $number = (int) substr($lastID, 1); 
-        $newID = 'v' . str_pad($number + 1, 3, '0', STR_PAD_LEFT);  
+        $newID = 'V' . str_pad($number + 1, 3, '0', STR_PAD_LEFT);  
     } else {
-        $newID = 'v001';  
+        $newID = 'V001';  
     }
 
     $sql = "INSERT INTO voucher (voucherID, voucherCode, startDate, endDate, discountRate, voucherStatus) 

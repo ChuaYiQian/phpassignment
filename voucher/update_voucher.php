@@ -9,7 +9,12 @@ if (!isset($_POST['id']) || empty($_POST['id'])) {
 $id = $_POST['id'];
 $code = $_POST['code'];
 $discount = $_POST['discount'];
-$status = $_POST['status'];
+$today = date('Y-m-d'); // Determine voucher status based on expiry date
+if (!empty($expiry_date) && strtotime($expiry_date) < strtotime($today)) {
+    $status = "Expired";
+} else {
+    $status = "Active";
+}
 $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : NULL;
 
 $sql = "UPDATE voucher SET 

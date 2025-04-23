@@ -93,7 +93,16 @@
     font-size: 20px;
 }
 
-/* Payment Methods */
+.summary .price {
+    float: right;
+    text-align: right;
+    min-width: 100px;
+}
+
+.summary .discount-price {
+    color: red;
+}
+
 .payment-methods {
     display: flex;
     justify-content: center;

@@ -10,6 +10,22 @@ $voucherID = null;
 $taxRate = 0.06;
 $shippingFee = 5.00;
 
+$sql = "
+    SELECT 
+        p.productID,
+        p.productName,
+        p.productDescription,
+        p.productPrice,
+        p.productPicture,
+        oi.orderQuantity
+    FROM orderinformation oi
+    JOIN product p ON oi.productID = p.productID
+";
+$result = $conn->query($sql);
+if ($result) {
+    $products = $result->fetch_all(MYSQLI_ASSOC);
+}
+
 if (isset($_POST['apply_voucher'])) {
     $code = $_POST['voucher_code'] ?? '';
 
@@ -22,31 +38,24 @@ if (isset($_POST['apply_voucher'])) {
         $_SESSION['voucherID'] = $voucher['voucherID'];
         $_SESSION['voucherCode'] = $voucher['voucherCode'];
         $_SESSION['discount'] = floatval($voucher['discountRate']);
-        header("Location: payment.php"); // To avoid resubmission and clear messages
+        header("Location: payment.php"); 
         exit;
     } else {
         // Store the invalid voucher message in the session
         $_SESSION['voucherError'] = "Invalid or expired voucher code.";
         unset($_SESSION['voucherID'], $_SESSION['voucherCode'], $_SESSION['discount']);
-        header("Location: payment.php"); // Refresh the page after reload
+        header("Location: payment.php");
         exit;
     }
 }
 
 if (isset($_POST['remove_voucher'])) {
     unset($_SESSION['voucherID'], $_SESSION['voucherCode'], $_SESSION['discount']);
-    header("Location: payment.php"); // Refresh the page after removal
+    header("Location: payment.php"); 
     exit;
 }
 
 $discount = $_SESSION['discount'] ?? 0;
-
-$productIDs = implode(',', array_keys($cart));
-$products = [];
-if (!empty($cart)) {
-    $sql = "SELECT * FROM cartitem WHERE productID IN ($productIDs)";
-    $products = $conn->query($sql)->fetch_all();
-}
 
 /* Navigate to external web */
 // if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -80,23 +89,23 @@ if (!empty($cart)) {
                 <tr>
                     <th>Image</th>
                     <th>Product</th>
-                    <th class="price">Price(RM)</th>
+                    <th class="price">Price</th>
                     <th>Qty</th>
-                    <th class="price">Subtotal(RM)</th>
+                    <th class="price">Subtotal</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($products as $p): 
-                    $qty = $cart[$p['productID']];
+                    $qty = $p['orderQuantity'];
                     $subtotal = $p['productPrice'] * $qty;
                     $total += $subtotal;
                 ?>
                 <tr>
-                    <td><img src="/images/<?= $p['productPicture'] ?>"></td>
-                    <td><strong><?= $p['productName'] ?></strong><br><small><?= $p['productDescription'] ?></small></td>
-                    <td class="price">RM<?= number_format($p['productPrice'], 2) ?></td>
+                    <td><img src="/images/<?= $p['productPicture'] ?>" width="100"></td>
+                    <td><?= $p['productDescription'] ?></td>
+                    <td>RM<?= number_format($p['productPrice'], 2) ?></td>
                     <td><?= $qty ?></td>
-                    <td class="price">RM<?= number_format($subtotal, 2) ?></td>
+                    <td>RM<?= number_format($subtotal, 2) ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -132,11 +141,11 @@ if (!empty($cart)) {
             $finalTotal = $total - $discountAmount + $taxAmount + $shippingFee;
         ?>
         <div class="summary">
-            <p>Subtotal: RM<?= number_format($total, 2) ?></p>
-            <p>Discount: -RM<?= number_format($discountAmount, 2) ?></p> 
-            <p>Tax (6%): RM<?= number_format($taxAmount, 2) ?></p>
-            <p>Shipping: RM<?= number_format($shippingFee, 2) ?></p>
-            <h3>Total: RM<?= number_format($finalTotal, 2) ?></h3> 
+            <p>Subtotal: <span class="price">RM<?= number_format($total, 2) ?></span></p>
+            <p>Tax (6%): <span class="price">RM<?= number_format($taxAmount, 2) ?></span></p>
+            <p>Shipping: <span class="price">RM<?= number_format($shippingFee, 2) ?></span></p>
+            <p>Discount: <span class="price discount-price">-RM<?= number_format($discountAmount, 2) ?></span></p>
+            <h3>Total: <span class="price">RM<?= number_format($finalTotal, 2) ?></span></h3>
         </div>
 
         <form id="payment-form" method="POST" action="submit_payment.php">
