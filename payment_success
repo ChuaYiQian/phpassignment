@@ -1,0 +1,54 @@
+<?php
+session_start();
+include '../base.php';
+
+$orderID = $_GET['orderID'] ?? null;
+
+if (!$orderID) {
+    $_SESSION['error'] = "Missing order ID.";
+    header("Location: /home.php");
+    exit;
+}
+
+$recipientEmail = "kokhaw07112004@gmail.com"; 
+
+// Prepare email content
+$subject = "Payment Confirmation - Order #$orderID";
+$body = "
+    <h2>Thank you for your payment!</h2>
+    <p>Your payment for Order <strong>#$orderID</strong> has been received successfully.</p>
+    <p>You can now continue shopping or view your order history.</p>
+";
+
+// Send email
+try {
+    $mail = get_mail(); 
+    $mail->addAddress($recipientEmail, "Customer");
+    $mail->Subject = $subject;
+    $mail->Body = $body;
+    $mail->isHTML(true);
+    $mail->send();
+} catch (Exception $e) {
+    error_log("Email Error: " . $mail->ErrorInfo);
+    $_SESSION['error'] = "Failed to send confirmation email.";
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Success</title>
+    <meta http-equiv="refresh" content="5;url=/home.php">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+        h1 { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Payment Successful!</h1>
+    <p>A confirmation email has been sent to <strong><?php echo htmlspecialchars($recipientEmail); ?></strong>.</p>
+    <p>You will be redirected to the homepage shortly...</p>
+</body>
+</html>

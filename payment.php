@@ -148,7 +148,7 @@ $discount = $_SESSION['discount'] ?? 0;
             <h3>Total: <span class="price">RM<?= number_format($finalTotal, 2) ?></span></h3>
         </div>
 
-        <form id="payment-form" method="POST" action="submit_payment.php">
+        <form id="payment-form" method="POST" action="payment_process.php">
             <input type="hidden" name="amount" value="<?= $finalTotal ?>">
 
             <div class="payment-methods">
@@ -203,6 +203,11 @@ $discount = $_SESSION['discount'] ?? 0;
             <div class="place-order">
                 <button type="submit">Place Order</button>
             </div>
+        </form>
+        <form method="post" action="payment_process.php" style="margin-top: 20px;">
+            <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
+            <input type="hidden" name="paymentMethod" value="Simulated Failure">
+            <button type="submit" name="simulate" value="fail" style="color: red;">Simulate Payment Failure</button>
         </form>
 </div>
 

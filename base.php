@@ -196,4 +196,21 @@ function table_headers($fields, $sort, $dir, $href = '', $sortable = []) {
         echo "<th><a href='?sort=$k&dir=$d&$href' class='$c'>$v</a></th>";
     }
 }
+
+function get_mail() {
+    require_once 'lib/PHPMailer.php';
+    require_once 'lib/SMTP.php';
+
+    $m = new PHPMailer(true);
+    $m->isSMTP();
+    $m->SMTPAuth = true;
+    $m->Host = 'smtp.gmail.com';
+    $m->Port = 587;
+    $m->Username = 'liawcv1@gmail.com';
+    $m->Password = 'pztq znli gpjg tooe';
+    $m->CharSet = 'utf-8';
+    $m->setFrom($m->Username, '😺 Admin');
+
+    return $m;
+}
 ?>
