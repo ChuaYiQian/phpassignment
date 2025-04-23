@@ -1,5 +1,6 @@
 <?php
 include '../base.php';
+session_start();
 
 $staffID = "S001";
 $keyword = $_GET['search'] ?? '';
@@ -28,7 +29,7 @@ $carts = $stmt->fetchAll(PDO::FETCH_OBJ);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cart Maintenance - PopZone Collectibles</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        body { font-family: Arial, sans-serif;}
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
@@ -46,7 +47,7 @@ $carts = $stmt->fetchAll(PDO::FETCH_OBJ);
     </style>
 </head>
 <body>
-    <?php include '../header.php'; ?>
+    <?php include '../adminheader.php'; ?>
     
     <div class="header">
         <h1>Cart Maintenance</h1>

@@ -69,7 +69,7 @@ require_once '../lib/SimplePager.php';
 $p = new SimplePager("SELECT p.*, c.categoryName FROM product p LEFT JOIN category c ON p.categoryID = c.categoryID $where_sql ORDER BY $sort $dir", $params, 10, $page);
 $arr = $p->result;
 ?>
-
+<?php include '../adminheader.php'; ?>
 <p>
     <a href="/product/insertProduct.php">Insert</a>
 </p>

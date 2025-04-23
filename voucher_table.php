@@ -1,5 +1,6 @@
 <?php 
 include 'base.php'; 
+session_start();
 
 // Define table columns for display and sorting
 $fields = [
@@ -77,7 +78,7 @@ while ($row = $result->fetch_object()) {
     <link rel="stylesheet" href="./css/voucher.css"> 
 </head>
 <body>
-
+<?php include 'adminheader.php'; ?>
 <h2>Voucher List</h2>
 
 <!-- Search and Filter Form -->

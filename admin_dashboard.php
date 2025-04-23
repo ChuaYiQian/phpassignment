@@ -28,7 +28,7 @@ if ($result) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - PopZone Collectibles</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        body { font-family: Arial, sans-serif;}
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
@@ -47,7 +47,7 @@ if ($result) {
     </style>
 </head>
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'adminheader.php'; ?>
     
     <div class="header">
         <h1>Admin Dashboard</h1>
