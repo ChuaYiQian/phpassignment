@@ -3,7 +3,7 @@ session_start();
 include '../base.php';
 
 $orderID = $_POST['orderID'];
-$paymentMethod = $_POST['paymentMethod']; // E.g., 'Credit Card', 'TNG', 'FPX'
+$paymentMethod = $_POST['paymentMethod'];
 
 // Optional: validate input
 if (!$orderID || !$paymentMethod) {
