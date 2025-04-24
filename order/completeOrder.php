@@ -2,14 +2,22 @@
 session_start();
 require '../base.php';
 
-if (!isset($_POST['orderID'])) {
-    $_SESSION['error'] = 'no order id';
+if (isset($_POST['simulate']) && $_POST['simulate'] === 'fail') {
+    $orderID = $_POST['orderID'];
+    $_SESSION['error'] = "Simulated payment failure.";
+    $_SESSION['order_id'] = $orderID; 
     header("Location: /payment_error.php");
     exit;
 }
 
 $orderID = $_POST['orderID'];
 $userID = $_SESSION['user_id'];
+
+if (isset($_POST['simulate']) && $_POST['simulate'] === 'fail') {
+    $_SESSION['error'] = "Simulated payment failure.";
+    header("Location: /payment_error.php");
+    exit;
+}
 
 try {
     $_db->beginTransaction();

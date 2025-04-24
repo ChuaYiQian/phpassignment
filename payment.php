@@ -146,7 +146,6 @@ $discount = $_SESSION['discount'] ?? 0;
             <form id="payment-form" method="POST" action="../order/completeOrder.php">
                 <input type="hidden" name="amount" value="<?= $finalTotal ?>">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
-                <?php echo $_GET['orderID'] ?>
 
                 <div class="payment-methods">
                     <label class="method-option">
@@ -207,7 +206,7 @@ $discount = $_SESSION['discount'] ?? 0;
                     <button type="submit">Place Order</button>
                 </div>
             </form>
-            <form method="post" action="completeOrder.php" style="margin-top: 20px;">
+            <form method="POST" action="../order/completeOrder.php" style="margin-top: 20px;">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
                 <input type="hidden" name="paymentMethod" value="Simulated Failure">
                 <button type="submit" name="simulate" value="fail" style="color: red;">Simulate Payment Failure</button>
@@ -215,8 +214,6 @@ $discount = $_SESSION['discount'] ?? 0;
     </div>
 
     <script>
-        console.log("JS loaded"); 
-
     function toggleFields(method) {
         const cardFields = document.getElementById('card-details');
         const bankList = document.getElementById('bank-list');
