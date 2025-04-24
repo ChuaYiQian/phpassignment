@@ -6,10 +6,8 @@ $orderID = $_POST['orderID'];
 $paymentMethod = $_POST['payment_method'];
 
 try {
-    // Simulate payment success
     $_db->prepare("UPDATE `order` SET orderStatus = 'paid' WHERE orderID = ?")->execute([$orderID]);
 
-    // Insert payment record
     $_db->prepare("INSERT INTO payment (orderID, paymentMethod, paymentDate) VALUES (?, ?, NOW())")
         ->execute([$orderID, $paymentMethod]);
 

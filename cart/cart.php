@@ -115,7 +115,7 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <div class="sidebar">
-        <div class="sidebar-content">
+        <div class="sidebar-content" style="text-align: center;">
             <h2 class="sidebar-title" style="margin-bottom: 10px;">Order Summary</h2>
             
             <div class="item-list" id="selected-items-list">
