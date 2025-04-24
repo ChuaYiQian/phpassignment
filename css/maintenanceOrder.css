@@ -1,0 +1,175 @@
+/* maintenanceOrder.css */
+.container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.filter-section {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.btn-btn-primary{
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.85em;
+    border: none;
+    background-color: #8ef878;
+}
+
+.search-box {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 300px;
+}
+
+.status-filter {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.total-records {
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.order-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.order-table th, 
+.order-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.order-table th {
+    background-color: #f5ffd8;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.status-pending { background-color: #ffeb3b; color: #000; }
+.status-payed { background-color: #2196f3; color: white; }
+.status-sendout { background-color: #2196f3; color: white; }
+.status-completed { background-color: #4caf50; color: white; }
+.status-cancelled { background-color: #f44336; color: white; }
+
+.action-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.85em;
+    border: none;
+}
+
+.btn-view {
+    background-color: #5a5a5a;
+    color: white;
+}
+
+.btn-send {
+    background-color: #4f4f4f;
+    color: white;
+}
+
+.pagination {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+.page-item {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+}
+
+tr:nth-child(even):hover,tr:hover{
+    background-color: #deffd8;
+    transition-duration: 0.4s;
+}
+
+tr:nth-child(even){
+    background-color: #f8f8f8;
+}
+
+.page-item.active {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+.page-item:hover {
+    background-color: #f5f5f5;
+}
+
+.filter-section {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.filter-form {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.status-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.search-btn {
+    padding: 8px 15px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-btn:hover {
+    background-color: #1976D2;
+}
