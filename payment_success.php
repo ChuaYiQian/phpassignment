@@ -3,6 +3,7 @@ session_start();
 include 'base.php';
 
 $orderID = $_GET['orderID'] ?? null;
+$userID= $_SESSION['user_id'];
 
 if (!$orderID) {
     $_SESSION['error'] = "Missing order ID.";
@@ -10,7 +11,26 @@ if (!$orderID) {
     exit;
 }
 
-$recipientEmail = "kokhaw07112004@gmail.com"; 
+$stmt = $_db->prepare("SELECT userEmail FROM user WHERE userID = ?");
+$stmt->execute([$userID]);
+$user = $stmt->fetch(PDO::fetch_assoc);
+
+$recipientEmail = $user ? $user['email'] : null; 
+
+// Generate the Transaction ID
+function generateTransactionID($db) {
+    $stmt = $db->query("SELECT transactionID FROM transaction ORDER BY transactionID DESC LIMIT 1");
+    $lastID = $stmt->fetchColumn();
+    
+    if (!$lastID) {
+        return 'T0001';
+    }
+
+    $number = (int)substr($lastID, 1) + 1;
+    return 'T' . str_pad($number, 4, '0', STR_PAD_LEFT);
+}
+
+$transactionID = generateTransactionID($_db);
 
 // Prepare email content
 $subject = "Payment Confirmation - Order #$orderID";

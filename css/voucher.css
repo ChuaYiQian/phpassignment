@@ -4,6 +4,7 @@
 .table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 20px;
 }
 
 .table th, .table td {
@@ -65,4 +66,33 @@
 
 .table tr:hover .popup {
     display: block;
+}
+
+/*Paging*/
+nav.pager{
+    padding: 0;
+    background:transparent;
+    margin-top: 10px;
+}
+
+nav.pager a{
+    outline: 1px solid #333;
+}
+
+nav.pager a.active{
+    background:#333;
+}
+
+nav {
+    padding: 0 50px;
+    background: #999;
+    display: flex;
+}
+
+nav a {
+    padding: 5px 10px;
+    color: #fff;
+    background: #666;
+    text-decoration: none;
+    white-space: nowrap;
 }

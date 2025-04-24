@@ -59,6 +59,13 @@ $vouchers = [];
 while ($row = $result->fetch_object()) {
     $vouchers[] = $row;
 }
+
+// Paging
+$page = req('page', 1);
+require_once 'lib/SimplePager.php';
+
+$p = new SimplePager("SELECT * FROM voucher ORDER BY voucherID DESC", [], 10, $page);
+$voucher_list = $p->result;
 ?>
 
 <!DOCTYPE html>
@@ -71,6 +78,11 @@ while ($row = $result->fetch_object()) {
 <body>
 <?php include 'adminheader.php'; ?>
 <h2>Voucher List</h2>
+
+<p>
+    <?= $p->count ?> of <?= $p->item_count ?> record(s) |
+    Page <?= $p->page ?> of <?= $p->page_count ?> |
+</p>
 
 <!-- Search and Filter Form -->
 <form method="GET">
@@ -87,6 +99,7 @@ while ($row = $result->fetch_object()) {
 
 <!-- Voucher Table -->
 <a href="voucher/add_voucher.php"><button>Add Voucher</button></a>
+<br>
 <table class="table">
     <tr>
         <?php foreach ($fields as $key => $label): ?>
@@ -114,6 +127,7 @@ while ($row = $result->fetch_object()) {
             </td>
         </tr>
         <?php endforeach; ?>
+        <?= $p->html("sort=$sort&dir=$dir") ?>
     <?php else: ?>
         <tr><td colspan="7" style="text-align:center;">No vouchers found</td></tr>
     <?php endif; ?>
