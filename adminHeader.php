@@ -101,7 +101,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
         </div>
         <div class="side-btn">
             <a href="logout.php"><button type="submit" class="login-btn" hidden>Logout</button>Logout</a>
-            <form action="/logout.php" method="POST" style="display:inline;">
+            <form action="../logout.php" method="POST" style="display:inline;">
                 <button type="submit" class="login-btn" hidden>Logout</button>
             </form>
         </div>

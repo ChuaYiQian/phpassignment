@@ -237,3 +237,15 @@ body {
     color: #95a5a6;
     padding: 30px 0;
 }
+
+.animate {
+    animation: slideIn 0.3s ease-in-out;
+  }
+
+  @keyframes slideIn {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-12px); }
+    50% { transform: translateX(10px); }
+    75% { transform: translateX(-7px); }
+    100% { transform: translateX(0); }
+  }

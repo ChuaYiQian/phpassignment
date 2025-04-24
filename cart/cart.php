@@ -32,15 +32,17 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Shopping Cart</title>
     <link rel="stylesheet" href="/css/addToCart.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
 <body>
     <div class="main-container">
-    <div class="topbar">
+        <div class="topbar">
             <div class="topbar-Goback">
                 <a href="../home.php?userID=<?= $userID ?>">
                     <img src="/images/goBackIcon.png" alt="" width="40px" height="40px">
@@ -55,7 +57,9 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
         <div class="container">
             <?php if (empty($cartItems)): ?>
-                <p style="margin: 20px; font-size: 1.2em;">Your cart is currently empty.</p>
+                <img id="emptyCart" src="/images/emptyCart.png" height="100px" width="100px" style="margin-top:auto; margin-left:auto;margin-right:auto;">
+                <p style="color:grey;margin: 20px; font-size: 1.6em; text-align:center; margin-bottom:auto;
+                font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-weight:bold;">Your cart is currently empty</p>
             <?php else: ?>
                 <div style="margin: 15px;">
                     <label><input type="checkbox" id="select-all"> Select All</label>
@@ -64,18 +68,18 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="container-product-card">
 
                         <div class="product-checkbox">
-                            <input type="checkbox" class="cart-checkbox" 
-                                   data-id="<?= $item['productID'] ?>"
-                                   data-price="<?= $item['productPrice'] ?>"
-                                   data-qty="<?= $item['cartQuantity'] ?>"
-                                   data-name="<?= htmlspecialchars($item['productName']) ?>">
+                            <input type="checkbox" class="cart-checkbox"
+                                data-id="<?= $item['productID'] ?>"
+                                data-price="<?= $item['productPrice'] ?>"
+                                data-qty="<?= $item['cartQuantity'] ?>"
+                                data-name="<?= htmlspecialchars($item['productName']) ?>">
                         </div>
 
                         <div class="product-photo">
                             <?php $firstImage = explode(',', $item['productPicture'])[0]; ?>
-                            <img src="/images/<?= htmlspecialchars(trim($firstImage)) ?>" 
-                                 alt="<?= htmlspecialchars($item['productName']) ?>" 
-                                 width="200" height="200">
+                            <img src="/images/<?= htmlspecialchars(trim($firstImage)) ?>"
+                                alt="<?= htmlspecialchars($item['productName']) ?>"
+                                width="200" height="200">
                         </div>
 
                         <div class="product-detail">
@@ -87,8 +91,8 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                             <div class="product-quantity">
                                 <form class="quantity-form" method="post" action="/cartItem/updateQuantity.php">
-                                    <input type="number" name="newQuantity" 
-                                           value="<?= $item['cartQuantity'] ?>" min="1">
+                                    <input type="number" name="newQuantity"
+                                        value="<?= $item['cartQuantity'] ?>" min="1">
 
                                     <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
                                     <input type="hidden" name="cartID" value="<?= $cartID ?>">
@@ -101,8 +105,10 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
 
                         <div class="product-delete">
-                            <form method="post" action="/cartItem/deleteCartItem.php">
+                            <form action="/cartItem/deleteCartItem.php" method="post">
                                 <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
+                                <input type="hidden" name="cartID" value="<?= $cartID ?>">
+                                <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
                                 <button type="submit" style="border: none; background-color:white;">
                                     <img src="/images/deleteIcon.png" alt="Delete" width="30" height="30">
                                 </button>
@@ -117,7 +123,7 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="sidebar">
         <div class="sidebar-content" style="text-align: center;">
             <h2 class="sidebar-title" style="margin-bottom: 10px;">Order Summary</h2>
-            
+
             <div class="item-list" id="selected-items-list">
                 <div class="no-items">No items selected</div>
             </div>
@@ -142,25 +148,25 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
-    function updateTotalPrice() {
-        let selectedItems = [];
-        let totalPrice = 0;
-        let itemCount = 0;
+        function updateTotalPrice() {
+            let selectedItems = [];
+            let totalPrice = 0;
+            let itemCount = 0;
 
-        $('#selected-items-list').empty();
+            $('#selected-items-list').empty();
 
-        $('.cart-checkbox:checked').each(function() {
-            const item = {
-                id: $(this).data('id'),
-                name: $(this).data('name'),
-                price: parseFloat($(this).data('price')),
-                qty: parseInt($(this).data('qty')),
-                total: function() {
-                    return this.price * this.qty;
-                }
-            };
+            $('.cart-checkbox:checked').each(function() {
+                const item = {
+                    id: $(this).data('id'),
+                    name: $(this).data('name'),
+                    price: parseFloat($(this).data('price')),
+                    qty: parseInt($(this).data('qty')),
+                    total: function() {
+                        return this.price * this.qty;
+                    }
+                };
 
-            const itemHtml = `
+                const itemHtml = `
                 <div class="item-card">
                     <div class="item-header">
                         <span class="item-name">${item.name}</span>
@@ -173,34 +179,39 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             `;
 
-            $('#selected-items-list').append(itemHtml);
-            selectedItems.push(item.id);
-            totalPrice += item.total();
-            itemCount++;
-        });
+                $('#selected-items-list').append(itemHtml);
+                selectedItems.push(item.id);
+                totalPrice += item.total();
+                itemCount++;
+            });
 
-        $('#total-price').text(totalPrice.toFixed(2));
-        $('#checkout-btn').prop('disabled', itemCount === 0);
-        $('#checkout-btn').html(`Proceed to Checkout (${itemCount} items)`);
-        $('#selected-items').val(selectedItems.join(','));
+            $('#total-price').text(totalPrice.toFixed(2));
+            $('#checkout-btn').prop('disabled', itemCount === 0);
+            $('#checkout-btn').html(`Proceed to Checkout (${itemCount} items)`);
+            $('#selected-items').val(selectedItems.join(','));
 
-        if (itemCount === 0) {
-            $('#selected-items-list').html('<div class="no-items">No items selected</div>');
+            if (itemCount === 0) {
+                $('#selected-items-list').html('<div class="no-items">No items selected</div>');
+            }
         }
-    }
 
-    $(document).on('change', '.cart-checkbox', updateTotalPrice);
-    $(document).on('submit', '.quantity-form', function(e) {
-        e.preventDefault();
-        $.post($(this).attr('action'), $(this).serialize(), function() {
-            location.reload();
+        $(document).on('change', '.cart-checkbox', updateTotalPrice);
+        $(document).on('submit', '.quantity-form', function(e) {
+            e.preventDefault();
+            $.post($(this).attr('action'), $(this).serialize(), function() {
+                location.reload();
+            });
         });
-    });
 
-    $('#select-all').change(function() {
-        $('.cart-checkbox').prop('checked', $(this).prop('checked'));
-        updateTotalPrice();
-    });
+        $('#select-all').change(function() {
+            $('.cart-checkbox').prop('checked', $(this).prop('checked'));
+            updateTotalPrice();
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('emptyCart').classList.add('animate');
+        });
     </script>
 </body>
+
 </html>
