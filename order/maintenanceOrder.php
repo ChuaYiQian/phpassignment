@@ -13,6 +13,7 @@ $offset = ($page - 1) * $records_per_page;
 
 $search = isset($_GET['search']) ? "%{$_GET['search']}%" : '%';
 $status = isset($_GET['status']) ? $_GET['status'] : 'all';
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'date';
 
 $query = "SELECT o.orderID, o.userID, u.userName, o.orderDate, o.orderStatus 
           FROM `Order` o
@@ -26,12 +27,24 @@ if ($status != 'all') {
     $params['status'] = $status;
 }
 
-$stmt = $_db->prepare(str_replace('o.orderID, o.userID, u.userName, o.orderDate, o.orderStatus', 'COUNT(*) as total', $query));
+switch($sort) {
+    case 'id_asc':
+        $orderBy = 'o.orderID ASC';
+        break;
+    case 'id_desc':
+        $orderBy = 'o.orderID DESC';
+        break;
+    default:
+        $orderBy = 'o.orderDate DESC';
+}
+
+$countQuery = str_replace('o.orderID, o.userID, u.userName, o.orderDate, o.orderStatus', 'COUNT(*) as total', $query);
+$stmt = $_db->prepare($countQuery);
 $stmt->execute($params);
 $total_records = $stmt->fetchColumn();
 $total_pages = ceil($total_records / $records_per_page);
 
-$query .= " ORDER BY o.orderDate DESC LIMIT :offset, :limit";
+$query .= " ORDER BY $orderBy LIMIT :offset, :limit";
 $params['offset'] = $offset;
 $params['limit'] = $records_per_page;
 
@@ -49,7 +62,6 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,35 +69,43 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="admin_dashboard.php">
     <link rel="stylesheet" href="/css/maintenanceOrder.css">
 </head>
-
 <body>
     <?php include '../adminheader.php'; ?>
-
+    
     <div class="container">
         <h1>Order Maintenance</h1>
 
         <div class="filter-section">
-    <form method="get" action="maintenanceOrder.php" class="filter-form">
-        <div class="search-group">
-            <input type="text" name="search" class="search-box" 
-                   placeholder="Search by Order ID or Username..."
-                   value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-            <button type="submit" class="search-btn">Search</button>
-        </div>
+            <form method="get" action="maintenanceOrder.php" class="filter-form">
+                <div class="search-group">
+                    <input type="text" name="search" class="search-box" 
+                           placeholder="Search by Order ID or Username..."
+                           value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                    <button type="submit" class="search-btn">Search</button>
+                </div>
 
-        <div class="status-group">
-            <select name="status" class="status-filter">
-                <option value="all" <?= $status == 'all' ? 'selected' : '' ?>>All Statuses</option>
-                <option value="pending" <?= $status == 'pending' ? 'selected' : '' ?>>Pending</option>
-                <option value="payed" <?= $status == 'payed' ? 'selected' : '' ?>>Payed</option>
-                <option value="sendout" <?= $status == 'sendout' ? 'selected' : '' ?>>Send Out</option>
-                <option value="completed" <?= $status == 'completed' ? 'selected' : '' ?>>Completed</option>
-                <option value="cancelled" <?= $status == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-            </select>
-            <button type="submit" class="btn-btn-primary">Filter</button>
+                <div class="status-group">
+                    <select name="status" class="status-filter">
+                        <option value="all" <?= $status == 'all' ? 'selected' : '' ?>>All Statuses</option>
+                        <option value="pending" <?= $status == 'pending' ? 'selected' : '' ?>>Pending</option>
+                        <option value="payed" <?= $status == 'payed' ? 'selected' : '' ?>>Payed</option>
+                        <option value="sendout" <?= $status == 'sendout' ? 'selected' : '' ?>>Send Out</option>
+                        <option value="completed" <?= $status == 'completed' ? 'selected' : '' ?>>Completed</option>
+                        <option value="cancelled" <?= $status == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+
+                <div class="sort-group">
+                    <select name="sort" class="sort-filter">
+                        <option value="date" <?= $sort == 'date' ? 'selected' : '' ?>>Sort by Date</option>
+                        <option value="id_asc" <?= $sort == 'id_asc' ? 'selected' : '' ?>>Order ID ↑</option>
+                        <option value="id_desc" <?= $sort == 'id_desc' ? 'selected' : '' ?>>Order ID ↓</option>
+                    </select>
+                    <button type="submit" class="btn btn-sort">Sort</button>
+                </div>
+            </form>
         </div>
-    </form>
-</div>
 
         <div class="total-records">
             Total Records: <?= $total_records ?>
@@ -134,8 +154,8 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
 
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a class="page-item <?= $i == $page ? 'active' : '' ?>"
-                    href="<?= getPaginationLink($i) ?>">
+                <a class="page-item <?= $i == $page ? 'active' : '' ?>" 
+                   href="<?= getPaginationLink($i) ?>">
                     <?= $i ?>
                 </a>
             <?php endfor; ?>
@@ -148,12 +168,10 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
 </body>
-
 </html>
 
 <?php
-function getPaginationLink($page)
-{
+function getPaginationLink($page) {
     $params = $_GET;
     $params['page'] = $page;
     return 'maintenanceOrder.php?' . http_build_query($params);
