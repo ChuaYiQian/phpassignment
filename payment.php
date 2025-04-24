@@ -2,6 +2,7 @@
 include 'base.php';
 session_start();
 
+
 $cart = $_SESSION['cart'] ?? [];
 $total = 0;
 $discount = 0;
@@ -142,7 +143,7 @@ $discount = $_SESSION['discount'] ?? 0;
                 <h3>Total: <span class="price">RM<?= number_format($finalTotal, 2) ?></span></h3>
             </div>
 
-            <form id="payment-form" method="POST" action="payment_process.php">
+            <form id="payment-form" method="POST" action="../order/completeOrder.php">
                 <input type="hidden" name="amount" value="<?= $finalTotal ?>">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
 
@@ -173,6 +174,10 @@ $discount = $_SESSION['discount'] ?? 0;
                     <input type="text" name="card_cvv" placeholder="CVV">
                 </div>
 
+                <!-- Tng -->
+                 <div id = "tng" class="paidtng">
+                    <img src="/images/paidtng.jpg" alt="tng">
+
                 <!-- Bank Options -->
                 <div id="bank-list" class="bank-list">
                     <label>Select Bank:</label>
@@ -199,7 +204,7 @@ $discount = $_SESSION['discount'] ?? 0;
                     <button type="submit">Place Order</button>
                 </div>
             </form>
-            <form method="post" action="payment_process.php" style="margin-top: 20px;">
+            <form method="post" action="completeOrder.php" style="margin-top: 20px;">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
                 <input type="hidden" name="paymentMethod" value="Simulated Failure">
                 <button type="submit" name="simulate" value="fail" style="color: red;">Simulate Payment Failure</button>
@@ -222,6 +227,7 @@ $discount = $_SESSION['discount'] ?? 0;
 
         // Hide all by default
         cardFields.style.display = "none";
+        paidtng.style.display = "none";
         bankList.style.display = "none";
 
         methodRadios.forEach(radio => {
