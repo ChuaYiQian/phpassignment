@@ -2,13 +2,13 @@
 session_start();
 require '../base.php';
 
-if (!isset($_GET['orderID'])) {
+if (!isset($_POST['orderID'])) {
     $_SESSION['error'] = 'no order id';
     header("Location: /payment_error.php");
     exit;
 }
 
-$orderID = $_GET['orderID'];
+$orderID = $_POST['orderID'];
 $userID = $_SESSION['user_id'];
 
 try {
@@ -49,7 +49,7 @@ try {
             ':qty' => $item['orderQuantity'],
             ':pid' => $item['productID']
         ]);
-        
+
         if ($productUpdateStmt->rowCount() === 0) {
             throw new Exception("Stock too less: PID-{$item['productID']}");
         }
@@ -58,7 +58,7 @@ try {
     $updateStmt = $_db->prepare("
         UPDATE `Order`
         SET orderStatus = 'completed',
-            completionDate = NOW()
+            orderDate = NOW()
         WHERE orderID = ?
     ");
     $updateStmt->execute([$orderID]);
@@ -73,8 +73,8 @@ try {
 
 } catch (PDOException $e) {
     $_db->rollBack();
-    error_log("error: " . $e->getMessage());
-    $_SESSION['error'] = 'try again';
+    error_log("PDO error: " . $e->getMessage()); // Log it
+    $_SESSION['error'] = "Database error occurred. Please try again.";
     header("Location: /payment_error.php");
     exit;
 } catch (Exception $e) {

@@ -3,7 +3,7 @@ session_start();
 require_once 'base.php';
 
 // Check permissions
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
     header("Location: home.php");
     exit();
 }
