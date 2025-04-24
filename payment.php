@@ -174,6 +174,10 @@ $discount = $_SESSION['discount'] ?? 0;
                     <input type="text" name="card_cvv" placeholder="CVV">
                 </div>
 
+                <!-- Tng -->
+                 <div id = "tng" class="paidtng">
+                    <img src="/images/paidtng.jpg" alt="tng">
+
                 <!-- Bank Options -->
                 <div id="bank-list" class="bank-list">
                     <label>Select Bank:</label>
@@ -223,6 +227,7 @@ $discount = $_SESSION['discount'] ?? 0;
 
         // Hide all by default
         cardFields.style.display = "none";
+        paidtng.style.display = "none";
         bankList.style.display = "none";
 
         methodRadios.forEach(radio => {
