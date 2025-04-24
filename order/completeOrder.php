@@ -1,55 +1,84 @@
 <?php
-
 session_start();
 require '../base.php';
 
-// if (!isset($_GET['orderID']) {
-//     $_SESSION['error'] = 'Missing order identifier';
-//     header("Location: /payment_error.php");
-//     exit;
-// }
+if (!isset($_GET['orderID'])) {
+    $_SESSION['error'] = 'no order id';
+    header("Location: /payment_error.php");
+    exit;
+}
 
 $orderID = $_GET['orderID'];
+$userID = $_SESSION['user_id'];
 
 try {
-    $stmt = $_db->prepare("
+    $_db->beginTransaction();
+
+    $orderStmt = $_db->prepare("
         SELECT orderID 
         FROM `Order`
         WHERE orderID = ? 
         AND userID = ? 
         AND orderStatus = 'pending'
+        FOR UPDATE
     ");
-    $stmt->execute([
-        $orderID,
-        $_SESSION['user_id']
-    ]);
+    $orderStmt->execute([$orderID, $userID]);
     
-    $order = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$orderStmt->fetch()) {
+        throw new Exception('cannot fetch order');
+    }
 
-    if (!$order) {
-        throw new Exception('Invalid order or unauthorized access');
+    $itemsStmt = $_db->prepare("
+        SELECT productID, orderQuantity 
+        FROM orderInformation 
+        WHERE orderID = ?
+    ");
+    $itemsStmt->execute([$orderID]);
+    $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $productUpdateStmt = $_db->prepare("
+        UPDATE Product 
+        SET productQuantity = productQuantity - :qty,
+            salesCount = salesCount + :qty
+        WHERE productID = :pid
+        AND productQuantity >= :qty
+    ");
+
+    foreach ($orderItems as $item) {
+        $productUpdateStmt->execute([
+            ':qty' => $item['orderQuantity'],
+            ':pid' => $item['productID']
+        ]);
+        
+        if ($productUpdateStmt->rowCount() === 0) {
+            throw new Exception("Stock too less: PID-{$item['productID']}");
+        }
     }
 
     $updateStmt = $_db->prepare("
         UPDATE `Order`
-        SET orderStatus = 'completed'
+        SET orderStatus = 'completed',
+            completionDate = NOW()
         WHERE orderID = ?
     ");
     $updateStmt->execute([$orderID]);
 
     if ($updateStmt->rowCount() === 0) {
-        throw new Exception('Order status update failed');
+        throw new Exception('updating order status unsuccessful');
     }
 
+    $_db->commit();
     header("Location: /payment_success.php?orderID=" . urlencode($orderID));
     exit;
 
 } catch (PDOException $e) {
-    error_log("Database Error: " . $e->getMessage());
-    $_SESSION['error'] = 'Database operation failed';
+    $_db->rollBack();
+    error_log("error: " . $e->getMessage());
+    $_SESSION['error'] = 'try again';
     header("Location: /payment_error.php");
     exit;
 } catch (Exception $e) {
+    $_db->rollBack();
     $_SESSION['error'] = $e->getMessage();
     header("Location: /payment_error.php");
     exit;

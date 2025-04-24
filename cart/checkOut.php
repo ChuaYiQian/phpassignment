@@ -32,7 +32,6 @@ try {
         VALUES (?, ?, 0, CURDATE(), 'completed')
     ");
     $orderStmt->execute([$orderID, $userID]);
-
     
     $placeholders = implode(',', array_fill(0, count($selectedItems), '?'));
     $cartItemQuery = $_db->prepare("

@@ -129,9 +129,9 @@ body {
     border-bottom-right-radius: 20px;
     background-color: rgb(255, 238, 212);
     padding-left: 25px;
-    padding-top: 29px;
+    padding-top: 33px;
     padding-right: 25px;
-    padding-bottom: 20px;
+    padding-bottom: 34px;
     align-items: left;
     justify-content: left;
     width: 65%;
@@ -165,4 +165,74 @@ body {
 .product-delete img{
     display: flex;
     justify-content: center;
+
+}
+
+.sidebar {
+
+    background: #e2dada;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    height: 100vh;
+}
+
+.item-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 12px;
+    transition: transform 0.2s;
+}
+
+.item-card:hover {
+    transform: translateY(-2px);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.item-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+.item-price {
+    color: #e74c3c;
+    font-weight: 700;
+}
+
+.item-details {
+    display: flex;
+    justify-content: space-between;
+    color: #7f8c8d;
+    font-size: 0.85rem;
+}
+
+.checkout-btn {
+    background: #27ae60;
+    width: 100%;
+    padding: 15px;
+    font-size: 1rem;
+    transition: all 0.5s;
+    border-radius: 25px;
+}
+
+.checkout-btn:hover:not(:disabled) {
+    background: #e0ffec;
+    border-radius: 0px;
+    font-weight: bold;
+    border-radius: 8px;
+    color: #27ae60;
+}
+
+.no-items {
+    text-align: center;
+    color: #95a5a6;
+    padding: 30px 0;
 }
