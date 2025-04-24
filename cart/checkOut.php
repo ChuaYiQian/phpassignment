@@ -29,7 +29,7 @@ try {
     $orderStmt = $_db->prepare("
         INSERT INTO `Order` 
         (orderID, userID, orderTotal, orderDate, orderStatus)
-        VALUES (?, ?, 0, CURDATE(), 'completed')
+        VALUES (?, ?, 0, CURDATE(), 'pending')
     ");
     $orderStmt->execute([$orderID, $userID]);
     

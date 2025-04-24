@@ -61,10 +61,12 @@
             transition-duration: 0.5s;
             background-color: rgb(255, 255, 255);
         }
+
         .main-content {
-    margin-left: 150px; /* To offset the sidebar */
-    padding-top: 60px;  /* To offset the fixed header */
-}
+            margin-left: 155px;
+            padding-top: 60px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 

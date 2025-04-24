@@ -146,6 +146,7 @@ $discount = $_SESSION['discount'] ?? 0;
             <form id="payment-form" method="POST" action="../order/completeOrder.php">
                 <input type="hidden" name="amount" value="<?= $finalTotal ?>">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
+                <?php echo $_GET['orderID'] ?>
 
                 <div class="payment-methods">
                     <label class="method-option">
