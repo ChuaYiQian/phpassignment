@@ -1,3 +1,11 @@
+<?php
+
+// Check if admin is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
+    header("Location: home.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
