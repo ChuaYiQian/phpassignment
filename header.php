@@ -43,11 +43,14 @@
         <span class="close" onclick="closeLoginPopup()">&times;</span>
         <h2>Login</h2>
         <form action="login_process.php" method="POST">
+            <!-- Error message container -->
+            <div id="loginError" class="error-message" style="display: none;"></div>
+            
             <label for="username">Username:</label>
-            <input type="text" id="username" name="username" value="admin" required>
+            <input type="text" id="username" name="username" required>
 
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" value="admin" required>
+            <input type="password" id="password" name="password" required>
 
             <a href="signup.php" style="display:block">New User? Sign Up Here!</a>
 
@@ -92,4 +95,79 @@
             openSuccessPopup();
         }
     };
+
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check for success
+        if (urlParams.has('login') && urlParams.get('login') === 'success') {
+            openSuccessPopup();
+        }
+        
+        // Check for error
+        if (urlParams.has('login') && urlParams.get('login') === 'error') {
+            const message = urlParams.get('message');
+            showLoginError(message);
+        }
+    };
+
+    window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Check for logout success
+    if (urlParams.has('logout') && urlParams.get('logout') === 'success') {
+        showLogoutSuccess();
+    }
+        
+        // Open login popup if there's an error
+        if (urlParams.has('login') && urlParams.get('login') === 'error') {
+            const message = urlParams.get('message');
+            showLoginError(message);
+            openLoginPopup(); // Make sure popup is open
+        }
+        // Check for success
+        else if (urlParams.has('login') && urlParams.get('login') === 'success') {
+            openSuccessPopup();
+        }
+    };
+
+    function showLoginError(message) {
+        const errorElement = document.getElementById('loginError');
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+    }
+
+    function closeLoginPopup() {
+        document.getElementById("loginPopup").style.display = "none";
+        // Clear error when closing
+        const errorElement = document.getElementById('loginError');
+        if (errorElement) {
+            errorElement.style.display = 'none';
+            errorElement.textContent = '';
+        }
+        // Clean URL by removing error parameters
+        if (window.location.search.includes('login=error')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
+    function showLogoutSuccess() {
+    const popup = document.createElement('div');
+    popup.className = 'popup';
+    popup.style.zIndex = '100';
+    popup.style.display = 'block';
+    popup.innerHTML = `
+        <div class="popup-content">
+            <h2>Logout Successful!</h2>
+            <p>You have been successfully logged out.</p>
+            <button onclick="this.parentElement.parentElement.style.display='none'">OK</button>
+        </div>
+    `;
+    document.body.appendChild(popup);
+    
+    // Remove the logout parameter from URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
 </script>
