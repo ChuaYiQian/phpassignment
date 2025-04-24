@@ -2,14 +2,28 @@
 include 'base.php';
 session_start();
 
-
 $cart = $_SESSION['cart'] ?? [];
 $total = 0;
 $discount = 0;
 $voucherMsg = '';
 $voucherID = null;
-$taxRate = 0.06;
 $shippingFee = 5.00;
+
+// To get the tax rate from database
+$selectedPaymentID = $_POST['payment_method'] ?? null;
+$selectedMethod = null;
+$taxRate = 0.00;
+
+if ($selectedPaymentID) {
+    $stmt = $conn->prepare("SELECT * FROM paymentmethod WHERE paymentID = ?");
+    $stmt->bind_param("s", $selectedPaymentID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result && $row = $result->fetch_assoc()) {
+        $selectedMethod = $row;
+        $taxRate = floatval($row['taxRate']);  
+    }
+}
 
 $orderID = $_GET['orderID'] ?? ''; 
 
@@ -35,6 +49,15 @@ if ($result) {
     $products = $result->fetch_all(MYSQLI_ASSOC);
 }
 
+$method_sql = "SELECT * FROM paymentmethod";
+$method_result = $conn->query($method_sql);
+$payment_methods = [];
+
+if ($method_result && $method_result->num_rows > 0) {
+    while ($row = $method_result->fetch_assoc()) {
+        $payment_methods[] = $row;
+    }
+}
 
 if (isset($_POST['apply_voucher'])) {
     $code = $_POST['voucher_code'] ?? '';
@@ -132,12 +155,12 @@ $discount = $_SESSION['discount'] ?? 0;
             <?php
                 $discount = $_SESSION['discount'] ?? 0;
                 $discountAmount = $total * ($discount / 100);
-                $taxAmount = $total * $taxRate;
+                $taxAmount = $total * $taxRate;  // Ensure taxAmount is calculated
                 $finalTotal = $total - $discountAmount + $taxAmount + $shippingFee;
             ?>
             <div class="summary">
                 <p>Subtotal: <span class="price">RM<?= number_format($total, 2) ?></span></p>
-                <p>Tax (6%): <span class="price">RM<?= number_format($taxAmount, 2) ?></span></p>
+                <p>Tax (<?= $taxRate * 100 ?>%): <span class="price">RM<?= number_format($taxAmount, 2) ?></span></p>
                 <p>Shipping: <span class="price">RM<?= number_format($shippingFee, 2) ?></span></p>
                 <p>Discount: <span class="price discount-price">-RM<?= number_format($discountAmount, 2) ?></span></p>
                 <h3>Total: <span class="price">RM<?= number_format($finalTotal, 2) ?></span></h3>
@@ -147,24 +170,15 @@ $discount = $_SESSION['discount'] ?? 0;
                 <input type="hidden" name="amount" value="<?= $finalTotal ?>">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
 
+                <!-- Payment Method -->
                 <div class="payment-methods">
-                    <label class="method-option">
-                        <input type="radio" name="payment_method" value="card" onclick="toggleFields('card')" required>
-                        <img src="/images/cards.png" alt="card">
-                        Credit / Debit Card
-                    </label>
-
-                    <label class="method-option">
-                        <input type="radio" name="payment_method" value="tng" onclick="toggleFields('tng')" required>
-                        <img src="/images/tng.png" alt="tng">
-                        Touch 'n Go
-                    </label>
-
-                    <label class="method-option">
-                        <input type="radio" name="payment_method" value="fpx" onclick="toggleFields('fpx')" required>
-                        <img src="/images/fpx.png" alt="fpx">
-                        Online Banking
-                    </label>
+                    <?php foreach ($payment_methods as $method): ?>
+                        <label class="method-option">
+                            <input type="radio" name="payment_method" value="<?= htmlspecialchars($method['paymentID']) ?>" onclick="toggleFields('<?= strtolower($method['category']) ?>')" required>
+                            <img src="/<?= $method['paymentIcon'] ?>" alt="<?= $method['paymentDescription'] ?>">
+                            <?= $method['paymentDescription'] ?>
+                        </label>
+                    <?php endforeach; ?>
                 </div>
 
                 <!-- Card Details -->
@@ -175,7 +189,7 @@ $discount = $_SESSION['discount'] ?? 0;
                 </div>
 
                 <!-- Tng -->
-                <div id = "tng" class="paidtng">
+                <div id="tng" class="paidtng">
                     <label>Please Scan the QR to Pay</label>
                     <img src="/images/paidtng.jpg" alt="tng">
                 </div>
@@ -183,42 +197,31 @@ $discount = $_SESSION['discount'] ?? 0;
                 <!-- Bank Options -->
                 <div id="bank-list" class="bank-list">
                     <label>Select Bank:</label>
-                    <label class="bank-option">
-                        <input type="radio" name="bank" value="HongLeong" />
-                        <img src="/images/hongleongbank.png" alt="HongLeong Bank" />
-                        <span>HongLeong Bank</span>
-                    </label>
-
-                    <label class="bank-option">
-                        <input type="radio" name="bank" value="publicbank" />
-                        <img src="/images/publicbank.png" alt="Public Bank" />
-                        <span>Public Bank</span>
-                    </label>
-
-                    <label class="bank-option">
-                        <input type="radio" name="bank" value="maybank" />
-                        <img src="/images/maybank.png" alt="Maybank" />
-                        <span>Maybank</span>
-                    </label>
+                    <?php foreach ($payment_methods as $method): ?>
+                        <?php if ($method['category'] == 'Online Banking'): ?>
+                            <label class="bank-option">
+                                <input type="radio" name="bank" value="<?= htmlspecialchars($method['paymentID']) ?>">
+                                <img src="/<?= $method['paymentIcon'] ?>" alt="<?= $method['paymentDescription'] ?>">
+                                <span><?= $method['paymentDescription'] ?></span>
+                            </label>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
                 </div>
 
                 <div class="place-order">
                     <button type="submit">Place Order</button>
                 </div>
             </form>
-            <form method="POST" action="../order/completeOrder.php" style="margin-top: 20px;">
-                <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
-                <input type="hidden" name="paymentMethod" value="Simulated Failure">
-                <button type="submit" name="simulate" value="fail" style="color: red;">Simulate Payment Failure</button>
-            </form>
     </div>
 
     <script>
     function toggleFields(method) {
         const cardFields = document.getElementById('card-details');
+        const paidtng = document.getElementById('tng');
         const bankList = document.getElementById('bank-list');
 
         cardFields.style.display = method === 'card' ? 'block' : 'none';
+        paidtng.style.display = 'none';
         bankList.style.display = method === 'fpx' ? 'block' : 'none';
     }
 
@@ -257,26 +260,12 @@ $discount = $_SESSION['discount'] ?? 0;
                 const cvv = document.querySelector('input[name="card_cvv"]').value.trim();
 
                 if (!cardNumber || !expiry || !cvv) {
-                    alert("Please fill in all card details.");
+                    alert("Please complete card details.");
                     e.preventDefault();
-                    return;
-                }
-            }
-            //if (method === "tng"){
-              //  const 
-            //}
-
-            if (method === "fpx") {
-                const selectedBank = document.querySelector('input[name="bank"]:checked');
-                if (!selectedBank) {
-                    alert("Please select a bank for FPX payment.");
-                    e.preventDefault();
-                    return;
                 }
             }
         });
     });
     </script>
-
 </body>
 </html>

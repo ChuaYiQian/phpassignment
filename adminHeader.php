@@ -100,6 +100,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
             <a href="/voucher_table.php">Voucher</a>
         </div>
         <div class="side-btn">
+            <a href="/payment_table.php">Payment Methods</a>
+        </div>
+        <div class="side-btn">
             <a href="logout.php"><button type="submit" class="login-btn" hidden>Logout</button>Logout</a>
             <form action="../logout.php" method="POST" style="display:inline;">
                 <button type="submit" class="login-btn" hidden>Logout</button>
