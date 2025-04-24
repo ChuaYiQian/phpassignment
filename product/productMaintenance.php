@@ -70,14 +70,14 @@ $p = new SimplePager("SELECT p.*, c.categoryName FROM product p LEFT JOIN catego
 $arr = $p->result;
 ?>
 <?php include '../adminheader.php'; ?>
-<p>
-    <a href="/product/insertProduct.php">Insert</a>
-</p>
+<br/>
 <p>
     <?= $p->count ?> of <?= $p->item_count ?> record(s) |
     Page <?= $p->page ?> of <?= $p->page_count ?>
+    <a href="/product/insertProduct.php">Insert New Product</a>
 </p>
 <link rel="stylesheet" href="/css/productMaintenance.css">
+<br/>
 <form>
     Product ID: <?= html_search('productID') ?>
     Product Name: <?= html_search('productName') ?>
@@ -98,6 +98,7 @@ $arr = $p->result;
     </select>
     <button>Search</button>
 </form>
+<br/>
 <table class="table">
     <tr>
         <th colspan="11" style="font-size: 25px;background-color:rgba(0, 0, 0, 0.11);">Product Table</th>

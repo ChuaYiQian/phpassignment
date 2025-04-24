@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../base.php';
+include 'base.php';
 
 $orderID = $_GET['orderID'] ?? null;
 
