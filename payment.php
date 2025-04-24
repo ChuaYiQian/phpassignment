@@ -175,8 +175,10 @@ $discount = $_SESSION['discount'] ?? 0;
                 </div>
 
                 <!-- Tng -->
-                 <div id = "tng" class="paidtng">
+                <div id = "tng" class="paidtng">
+                    <label>Please Scan the QR to Pay</label>
                     <img src="/images/paidtng.jpg" alt="tng">
+                </div>
 
                 <!-- Bank Options -->
                 <div id="bank-list" class="bank-list">
@@ -212,6 +214,8 @@ $discount = $_SESSION['discount'] ?? 0;
     </div>
 
     <script>
+        console.log("JS loaded"); 
+
     function toggleFields(method) {
         const cardFields = document.getElementById('card-details');
         const bankList = document.getElementById('bank-list');
@@ -223,6 +227,7 @@ $discount = $_SESSION['discount'] ?? 0;
     document.addEventListener("DOMContentLoaded", function () {
         const methodRadios = document.querySelectorAll('input[name="payment_method"]');
         const cardFields = document.getElementById('card-details');
+        const paidtng = document.getElementById('tng');
         const bankList = document.getElementById('bank-list');
 
         // Hide all by default
@@ -259,6 +264,9 @@ $discount = $_SESSION['discount'] ?? 0;
                     return;
                 }
             }
+            //if (method === "tng"){
+              //  const 
+            //}
 
             if (method === "fpx") {
                 const selectedBank = document.querySelector('input[name="bank"]:checked');

@@ -86,6 +86,7 @@ while ($row = $result->fetch_object()) {
 </form>
 
 <!-- Voucher Table -->
+<a href="voucher/add_voucher.php"><button>Add Voucher</button></a>
 <table class="table">
     <tr>
         <?php foreach ($fields as $key => $label): ?>
@@ -118,7 +119,6 @@ while ($row = $result->fetch_object()) {
     <?php endif; ?>
 </table>
 
-<a href="voucher/add_voucher.php"><button>Add Voucher</button></a>
 
 </body>
 </html>
