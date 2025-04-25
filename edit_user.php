@@ -40,7 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $phone = trim($_POST['phone']);
     $address = trim($_POST['address']);
     $age = intval($_POST['age']);
-    $status = $_POST['status'];
 
     // Validation
     if (empty($name)) $errors[] = "Name is required";
@@ -59,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->close();
 
     if (empty($errors)) {
-        $stmt = $conn->prepare("UPDATE user SET userName = ?, userGender = ?, userEmail = ?, userPhoneNum = ?, userAddress = ?, userAge = ?, userStatus = ? WHERE userID = ?");
-        $stmt->bind_param("sssssiss", $name, $gender, $email, $phone, $address, $age, $status, $user_id);
+        $stmt = $conn->prepare("UPDATE user SET userName = ?, userGender = ?, userEmail = ?, userPhoneNum = ?, userAddress = ?, userAge = ? WHERE userID = ?");
+        $stmt->bind_param("sssssis", $name, $gender, $email, $phone, $address, $age, $user_id);
 
         if ($stmt->execute()) {
             $success = true;
@@ -127,7 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         .btn {
             display: inline-block;
-            background: #3498db;
             color: #fff;
             padding: 10px 20px;
             border: none;
@@ -135,14 +133,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             cursor: pointer;
             text-decoration: none;
             font-size: 16px;
+            height: 40px; /* Fixed height for both buttons */
+            line-height: 20px; /* Center text vertically */
+            box-sizing: border-box;
         }
         
-        .btn:hover {
+        .btn-primary {
+            background: #3498db;
+        }
+        
+        .btn-primary:hover {
             background: #2980b9;
         }
         
         .btn-secondary {
             background: #95a5a6;
+            margin-left: 10px;
         }
         
         .btn-secondary:hover {
@@ -163,6 +169,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             padding: 10px;
             border-radius: 4px;
             margin-bottom: 20px;
+        }
+        
+        .form-actions {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -218,14 +228,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="form-group">
                     <label for="age">Age:</label>
                     <input type="number" id="age" name="age" min="13" value="<?= htmlspecialchars($user['userAge']) ?>" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="status">Status:</label>
-                    <select id="status" name="status" required>
-                        <option value="active" <?= $user['userStatus'] == 'active' ? 'selected' : '' ?>>Active</option>
-                        <option value="inactive" <?= $user['userStatus'] == 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                    </select>
                 </div>
                 
                 <button type="submit" class="btn btn-primary">Update User</button>

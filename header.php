@@ -46,13 +46,13 @@
             <!-- Error message container -->
             <div id="loginError" class="error-message" style="display: none;"></div>
             
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
+            <label for="username">Username/Email:</label>
+            <input type="text" id="username" name="username" value="admin" required>
 
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" id="password" name="password" value="admin" required>
 
-            <a href="signup.php" style="display:block">New User? Sign Up Here!</a>
+            <a href="signup.php" style="display:block; margin-top:10px; margin-bottom:10px">New User? Sign Up Here!</a>
 
             <button type="submit">Login</button>
         </form>
