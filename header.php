@@ -154,74 +154,19 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
     </div>
 </div>
 
+<!-- Logout success popup -->
+<div id="logoutPopup" class="popup" style="display:none; z-index:100;">
+    <div class="popup-content">
+        <span class="close" onclick="closeLogoutPopup()">&times;</span>
+        <h2>Logout Successful!</h2>
+        <p>You have been successfully logged out.</p>
+        <button class="popup-button" onclick="closeLogoutPopup()">OK</button>
+    </div>
+</div>
+
 <script>
     function openLoginPopup() {
         document.getElementById("loginPopup").style.display = "block";
-    }
-
-    function closeLoginPopup() {
-        document.getElementById("loginPopup").style.display = "none";
-    }
-
-    function openSuccessPopup() {
-        closeLoginPopup();
-        document.getElementById("successPopup").style.display = "block";
-    }
-
-    function closeSuccessPopup() {
-        document.getElementById("successPopup").style.display = "none";
-        window.location.href = "home.php";
-    }
-
-    // Check for success parameter in URL
-    window.onload = function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('login') && urlParams.get('login') === 'success') {
-            openSuccessPopup();
-        }
-    };
-
-    window.onload = function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Check for success
-        if (urlParams.has('login') && urlParams.get('login') === 'success') {
-            openSuccessPopup();
-        }
-        
-        // Check for error
-        if (urlParams.has('login') && urlParams.get('login') === 'error') {
-            const message = urlParams.get('message');
-            showLoginError(message);
-        }
-    };
-
-    window.onload = function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Check for logout success
-    if (urlParams.has('logout') && urlParams.get('logout') === 'success') {
-        showLogoutSuccess();
-    }
-        
-        // Open login popup if there's an error
-        if (urlParams.has('login') && urlParams.get('login') === 'error') {
-            const message = urlParams.get('message');
-            showLoginError(message);
-            openLoginPopup(); // Make sure popup is open
-        }
-        // Check for success
-        else if (urlParams.has('login') && urlParams.get('login') === 'success') {
-            openSuccessPopup();
-        }
-    };
-
-    function showLoginError(message) {
-        const errorElement = document.getElementById('loginError');
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
     }
 
     function closeLoginPopup() {
@@ -232,27 +177,51 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
             errorElement.style.display = 'none';
             errorElement.textContent = '';
         }
-        // Clean URL by removing error parameters
-        if (window.location.search.includes('login=error')) {
-            window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function openSuccessPopup() {
+        closeLoginPopup();
+        document.getElementById("successPopup").style.display = "block";
+    }
+
+    function closeSuccessPopup() {
+        document.getElementById("successPopup").style.display = "none";
+    }
+
+    function openLogoutPopup() {
+    document.getElementById("logoutPopup").style.display = "flex"; 
+}
+
+function closeLogoutPopup() {
+    document.getElementById("logoutPopup").style.display = "none";
+}
+
+    function showLoginError(message) {
+        const errorElement = document.getElementById('loginError');
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
         }
     }
 
-    function showLogoutSuccess() {
-    const popup = document.createElement('div');
-    popup.className = 'popup';
-    popup.style.zIndex = '100';
-    popup.style.display = 'block';
-    popup.innerHTML = `
-        <div class="popup-content">
-            <h2>Logout Successful!</h2>
-            <p>You have been successfully logged out.</p>
-            <button onclick="this.parentElement.parentElement.style.display='none'">OK</button>
-        </div>
-    `;
-    document.body.appendChild(popup);
+    // Check for messages when page loads
+    window.onload = function() {
+        <?php if (isset($_SESSION['login_error'])): ?>
+            showLoginError("<?php echo addslashes($_SESSION['login_error']); ?>");
+            openLoginPopup();
+            <?php unset($_SESSION['login_error']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['login_success'])): ?>
+            openSuccessPopup();
+            <?php unset($_SESSION['login_success']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['logout_success'])): ?>
+            openLogoutPopup();
+            <?php unset($_SESSION['logout_success']); ?>
+        <?php endif; ?>
+    };
+
     
-    // Remove the logout parameter from URL
-    window.history.replaceState({}, document.title, window.location.pathname);
-}
 </script>
