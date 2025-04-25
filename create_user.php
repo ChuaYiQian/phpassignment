@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         error_log("Creating new $role with ID: $userID");
         
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $profile_pic = 'uploads/default_profile.png';
+        $profile_pic = 'images/default_profile.png';
 
         $stmt = $conn->prepare("INSERT INTO user (userID, userName, userGender, userEmail, userPhoneNum, userPassword, userAddress, userProfilePicture, userStatus, userRole, userAge) 
                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)");
