@@ -89,6 +89,9 @@ if (is_post()) {
             <label>
                 <input type="radio" name="category" value="Online Banking" required> Online Banking
             </label>
+            <label>
+                <input type="radio" name="category" value="Bank" required> FPX - Bank
+            </label>
             <?= err('category') ?>
 
             <label>Upload Icon</label>

@@ -91,6 +91,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <label><input type="radio" name="category" value="Credit/Debit Card" <?= $row['category'] == 'Credit/Debit Card' ? 'checked' : '' ?>> Credit/Debit Card</label>
             <label><input type="radio" name="category" value="E-wallet" <?= $row['category'] == 'E-wallet' ? 'checked' : '' ?>> E-wallet</label>
             <label><input type="radio" name="category" value="Online Banking" <?= $row['category'] == 'Online Banking' ? 'checked' : '' ?>> Online Banking</label><br>
+            <label><input type="radio" name="category" value="Bank" <?= $row['category'] == 'Bank' ? 'checked' : '' ?>> FPX - Bank</label><br>
+
 
             <label>Current Icon</label>
             <div class="upload-wrapper">
