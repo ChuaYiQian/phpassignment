@@ -1,9 +1,25 @@
 <?php
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // Check if admin is logged in
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
     header("Location: home.php");
     exit();
+}
+
+// Ensure profile picture is set in session
+if (!isset($_SESSION['user_profile_pic'])) {
+    require_once 'base.php';
+    $stmt = $conn->prepare("SELECT userProfilePicture FROM user WHERE userID = ?");
+    $stmt->bind_param("s", $_SESSION['user_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows == 1) {
+        $user = $result->fetch_assoc();
+        $_SESSION['user_profile_pic'] = $user['userProfilePicture'];
+    }
+    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -33,6 +49,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
         .sidebar h2 {
             text-align: center;
             margin-bottom: 30px;
+            font-size: 16px;
+            padding: 0 10px;
         }
 
         .sidebar a {
@@ -50,7 +68,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
 
         /* Header */
         .adminheader {
-            width: 100%;
+            width: calc(100% - 150px);
             height: 60px;
             background-color: #1abc9c;
             padding: 15px 20px;
@@ -58,6 +76,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
             top: 0;
             left: 150px;
             z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .adminheader h1 {
@@ -75,12 +96,75 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
             padding-top: 60px;
             margin-right: 10px;
         }
+
+        /* Profile dropdown styles */
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .profile-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+        
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+        
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .profile-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: black;
+        }
+
+        .logout-btn:hover {
+            background-color: #f1f1f1;
+        }
     </style>
 </head>
 
-<header>
+<body>
     <div class="sidebar">
-        <h2><?php echo "Welcome, " . $_SESSION['user_name']; ?></h2>
+        <h2><?php echo "Welcome, " . htmlspecialchars($_SESSION['user_name']); ?></h2>
         <div class="side-btn">
             <a href="/dashboard.php">Dashboard</a>
         </div>
@@ -105,15 +189,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
         <div class="side-btn">
             <a href="/payment_table.php">Payment Methods</a>
         </div>
-        <div class="side-btn">
-            <a href="logout.php"><button type="submit" class="login-btn" hidden>Logout</button>Logout</a>
-            <form action="../logout.php" method="POST" style="display:inline;">
-                <button type="submit" class="login-btn" hidden>Logout</button>
-            </form>
-        </div>
     </div>
     <div class="adminheader">
         <h1>Admin Panel</h1>
+        <div class="profile-dropdown">
+            <button class="profile-btn">
+                <img src="<?php echo htmlspecialchars($_SESSION['user_profile_pic'] ?? '/uploads/default_profile.png'); ?>" class="profile-img" alt="Profile">
+            </button>
+            <div class="dropdown-content">
+                <a href="/admin_view_profile.php" style="font-size:14px">View Profile</a>
+                <form action="/logout.php" method="POST" style="display:inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+        </div>
     </div>
-</header>
-<div class="main-content">
+    <div class="main-content">

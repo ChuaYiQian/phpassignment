@@ -59,6 +59,9 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
             padding: 12px 16px;
             text-decoration: none;
             display: block;
+            text-align: left !important;
+            font-size:14px !important;
+            font-weight: normal !important;
         }
         
         .dropdown-content a:hover {
@@ -68,6 +71,21 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
         
         .profile-dropdown:hover .dropdown-content {
             display: block;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: black;
+        }
+
+        .logout-btn:hover {
+            background-color: #f1f1f1;
         }
     </style>
 </head>
@@ -95,7 +113,7 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
                     <div class="dropdown-content">
                         <a href="/view_profile.php">View Profile</a>
                         <form action="/logout.php" method="POST" style="display:inline;">
-                            <button type="submit" style="background:none; border:none; width:100%; text-align:left; padding:12px 16px; cursor:pointer;">Logout</button>
+                            <button type="submit"  class="logout-btn">Logout</button>
                         </form>
                     </div>
                 </li>

@@ -26,7 +26,6 @@ if (!isset($_SESSION['user_profile_pic']) || $_SESSION['user_profile_pic'] !== $
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,11 +35,10 @@ if (!isset($_SESSION['user_profile_pic']) || $_SESSION['user_profile_pic'] !== $
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            line-height: 1.6;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
+            text-align: start !important;
         }
         
         .container {
@@ -56,11 +54,13 @@ if (!isset($_SESSION['user_profile_pic']) || $_SESSION['user_profile_pic'] !== $
             color: #2c3e50;
             border-bottom: 2px solid #3498db;
             padding-bottom: 10px;
+            margin-bottom: 20px;
+            margin-left: 0 !important;
+
         }
         
         .profile-header {
             display: flex;
-            align-items: center;
             margin-bottom: 20px;
         }
         
@@ -71,10 +71,11 @@ if (!isset($_SESSION['user_profile_pic']) || $_SESSION['user_profile_pic'] !== $
             object-fit: cover;
             margin-right: 20px;
             border: 3px solid #3498db;
+            margin-top:15px;
         }
         
         .profile-info {
-            flex-grow: 1;
+        
         }
         
         .info-row {
@@ -85,10 +86,12 @@ if (!isset($_SESSION['user_profile_pic']) || $_SESSION['user_profile_pic'] !== $
         .info-label {
             font-weight: bold;
             width: 150px;
+            color: #2c3e50;
         }
         
         .info-value {
-            flex-grow: 1;
+            
+            color: #34495e;
         }
         
         .btn {
@@ -100,20 +103,28 @@ if (!isset($_SESSION['user_profile_pic']) || $_SESSION['user_profile_pic'] !== $
             cursor: pointer;
             text-decoration: none;
             font-size: 16px;
+            margin-top: 20px;
         }
         
         .btn-primary {
-            background: #3498db;
+            background: #1abc9c;
         }
         
         .btn-primary:hover {
-            background: #2980b9;
+            background: #16a085;
         }
         
         .profile-actions {
             margin-top: 20px;
-            text-align: center;
         }
+
+        .btn-secondary {
+            background: #3498db;
+    margin-left: 10px;
+}
+.btn-secondary:hover {
+    background: #2980b9;
+}
     </style>
 </head>
 <body>
@@ -160,21 +171,12 @@ if (!isset($_SESSION['user_profile_pic']) || $_SESSION['user_profile_pic'] !== $
                 <div class="info-label">Age:</div>
                 <div class="info-value"><?php echo htmlspecialchars($user['userAge']); ?></div>
             </div>
-            
-            <div class="info-row">
-                <div class="info-label">Account Status:</div>
-                <div class="info-value"><?php echo ucfirst($user['userStatus']); ?></div>
-            </div>
-            
-            <div class="info-row">
-                <div class="info-label">Account Type:</div>
-                <div class="info-value"><?php echo ucfirst($user['userRole']); ?></div>
-            </div>
         </div>
         
-        <div class="profile-actions">
-            <a href="edit_profile.php" class="btn btn-primary">Edit Profile</a>
-        </div>
+        <div class="profile-actions" style="text-align: center;">
+    <a href="edit_profile.php" class="btn btn-primary">Edit Profile</a>
+    <a href="home.php" class="btn btn-secondary">Back to Home</a>
+</div>
     </div>
     
     <?php include 'footer.php'; ?>
