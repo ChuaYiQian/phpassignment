@@ -82,10 +82,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
     <div class="sidebar">
         <h2><?php echo "Welcome, " . $_SESSION['user_name']; ?></h2>
         <div class="side-btn">
-            <a href="dashboard.php">Dashboard</a>
+            <a href="/dashboard.php">Dashboard</a>
         </div>
         <div class="side-btn">
             <a href="/product/productMaintenance.php">Products</a>
+        </div>
+        <div class="side-btn">
+            <a href="/category/categoryMaintenance.php">Category</a>
         </div>
         <div class="side-btn">
             <a href="/order/maintenanceOrder.php">Orders</a>

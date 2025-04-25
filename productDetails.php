@@ -10,15 +10,22 @@ if (!$id) {
     exit;
 }
 
-$stm = $_db->prepare('SELECT * FROM product WHERE productID = ?');
+$stm = $_db->prepare('
+    SELECT p.* FROM product p
+    JOIN category c ON p.categoryID = c.categoryID
+    WHERE p.productID = ? 
+      AND p.productStatus = "available" 
+      AND c.categoryStatus = "available"
+');
 $stm->execute([$id]);
 $product = $stm->fetch(PDO::FETCH_OBJ);
 
-if (!$product || $product->productStatus !== 'available') {
+if (!$product) {
     echo "<p>Product not found or unavailable.</p>";
     include 'footer.php';
     exit;
 }
+
 
 $images = explode(',', $product->productPicture);
 
@@ -43,23 +50,15 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title><?= htmlspecialchars($product->productName) ?> - Details</title>
     <link rel="stylesheet" href="/css/productDetails.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-
-        let currentDetailSlide = 0;
-        const detailSlides = document.querySelectorAll('.detail-slide-image');
-
-        function moveDetailSlide(n) {
-            currentDetailSlide = (currentDetailSlide + n + detailSlides.length) % detailSlides.length;
-            document.getElementById('detailSlider').style.transform = 
-                `translateX(-${currentDetailSlide * 100}%)`;
-        }
-    </script>
+    <script src="/js/productDetails.js"></script>
 </head>
+
 <body>
     <div class="product-detail-container">
 
@@ -69,33 +68,26 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
                 <div class="detail-slides-wrapper">
                     <div class="detail-slides" id="detailSlider">
                         <?php foreach ($images as $img): ?>
-                            <img src="/images/<?= htmlspecialchars(trim($img)) ?>" 
-                                 class="detail-slide-image" 
-                                 alt="<?= htmlspecialchars($product->productName) ?>">
+                            <img src="/images/<?= trim($img) ?>" class="detail-slide-image">
                         <?php endforeach ?>
                     </div>
                 </div>
                 <button class="slider-btn next" onclick="moveDetailSlide(1)">&#10095;</button>
             </div>
         <?php else: ?>
-            <img src="/images/<?= htmlspecialchars(trim($images[0])) ?>" 
-                 class="detail-image" 
-                 alt="<?= htmlspecialchars($product->productName) ?>">
+            <img src="/images/<?= trim($images[0]) ?>" class="detail-image">
         <?php endif; ?>
 
         <div class="product-info">
-            <h1><?= htmlspecialchars($product->productName) ?></h1>
+            <h1 class="product-title"><?= htmlspecialchars($product->productName) ?></h1>
+
             <p class="detail-price">RM<?= number_format($product->productPrice, 2) ?></p>
             <p class="detail-description"><?= htmlspecialchars($product->productDescription) ?></p>
-            
+
             <form action="/cartItem/addCartItem.php" method="post">
-                <input type="number" 
-                       name="newQuantity" 
-                       value="1" 
-                       min="1" 
-                       max="<?= $product->productQuantity ?>">
+                <input type="number" name="newQuantity" value="1" min="1" max="<?= $product->productQuantity ?>">
                 <input type="hidden" name="productID" value="<?= $product->productID ?>">
-                <?php if(isset($_SESSION['user_id'])): ?>
+                <?php if (isset($_SESSION['user_id'])): ?>
                     <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
                 <?php endif; ?>
                 <button class="buy-button">Add To Cart</button>
@@ -104,12 +96,12 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
 
         <div class="product-reviews">
             <h2>Customer Reviews</h2>
-            
+
             <?php if (count($reviews) > 0): ?>
                 <?php foreach ($reviews as $review): ?>
                     <div class="review-card">
-                        <div class="review-header">                      
-                            <span class="review-user">User:<?=htmlspecialchars($review->userName) ?></span>
+                        <div class="review-header">
+                            <span class="review-user">User:<?= htmlspecialchars($review->userName) ?></span>
                             <div class="review-stars">
                                 <?php for ($i = 0; $i < 5; $i++): ?>
                                     <span class="star <?= $i < $review->starQuantity ? 'filled' : '' ?>">★</span>
@@ -126,6 +118,7 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
         </div>
     </div>
 </body>
+
 </html>
 
 <?php include 'footer.php'; ?>

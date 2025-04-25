@@ -70,14 +70,14 @@ $p = new SimplePager("SELECT p.*, c.categoryName FROM product p LEFT JOIN catego
 $arr = $p->result;
 ?>
 <?php include '../adminheader.php'; ?>
-<br/>
+<br />
 <p>
     <?= $p->count ?> of <?= $p->item_count ?> record(s) |
     Page <?= $p->page ?> of <?= $p->page_count ?>
     <a href="/product/insertProduct.php">Insert New Product</a>
 </p>
 <link rel="stylesheet" href="/css/productMaintenance.css">
-<br/>
+<br />
 <form>
     Product ID: <?= html_search('productID') ?>
     Product Name: <?= html_search('productName') ?>
@@ -98,14 +98,14 @@ $arr = $p->result;
     </select>
     <button>Search</button>
 </form>
-<br/>
+<br />
 <table class="table">
     <tr>
         <th colspan="11" style="font-size: 25px;background-color:rgba(0, 0, 0, 0.11);">Product Table</th>
     </tr>
     <tr>
         <?= table_headers($fields, $sort, $dir, "page=$page", $sortable) ?>
-        <th></th>
+        <th>Action</th>
     </tr>
     <?php foreach ($arr as $prod): ?>
         <tr>
@@ -134,8 +134,6 @@ $arr = $p->result;
             <td><?= $prod->createdDate ?></td>
             <td>
                 <a href="/product/updateProduct.php?id=<?= $prod->productID ?>">Update</a>
-                <a href="/product/deleteProduct.php?id=<?= $prod->productID ?>"
-                    onclick="return confirm('Delete this product?')">Delete</a>
             </td>
         </tr>
     <?php endforeach ?>

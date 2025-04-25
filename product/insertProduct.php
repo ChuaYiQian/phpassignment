@@ -3,6 +3,30 @@ include '../base.php';
 session_start();
 
 // ----------------------------------------------------------------------------
+$categoryOptions = [];
+try {
+    $stm = $_db->query("SELECT categoryID, categoryName FROM category");
+    if ($stm) {
+        while ($row = $stm->fetch(PDO::FETCH_ASSOC)) {
+            $categoryOptions[$row['categoryID']] = $row['categoryName'];
+        }
+    }
+} catch (PDOException $e) {
+    die("Error fetching categories: " . $e->getMessage());
+}
+
+// Auto-generate product ID
+try {
+    $stmt = $_db->query("SELECT COUNT(*) FROM product");
+    $productCount = $stmt->fetchColumn();
+    $nextProductID = 'P' . str_pad($productCount + 1, 3, '0', STR_PAD_LEFT);
+} catch (PDOException $e) {
+    die("Error generating product ID: " . $e->getMessage());
+}
+
+if (!is_post()) {
+    $_POST['productID'] = $nextProductID;
+}
 
 if (is_post()) {
     $productID = req('productID');
@@ -12,7 +36,7 @@ if (is_post()) {
     $productPrice = req('productPrice');
     $productQuantity = req('productQuantity');
     $productStatus = req('productStatus');
-    $salesCount = req('salesCount');
+    $salesCount = '0';
     $photos = $_FILES['photo'];
     $validPhotos = [];
     $uploadDir = '../images/';
@@ -42,16 +66,6 @@ if (is_post()) {
         $_err['photo'] = 'At least one photo is required.';
     }
 
-
-    // Validate: product id
-    if ($productID == '') {
-        $_err['productID'] = 'Required';
-    } else if (!preg_match('/^P\d{3}$/', $productID)) {
-        $_err['productID'] = 'Invalid format';
-    } else if (!is_unique($productID, 'product', 'productID')) {
-        $_err['productID'] = 'Duplicated';
-    }
-
     //Validate: category id
     if ($categoryID == '') {
         $_err['categoryID'] = 'Required';
@@ -64,8 +78,8 @@ if (is_post()) {
     // Validate: name
     if ($productName == '') {
         $_err['productName'] = 'Required';
-    } else if (strlen($productName) > 100) {
-        $_err['productName'] = 'Maximum 100 characters';
+    } else if (strlen($productName) > 30) {
+        $_err['productName'] = 'Maximum 15 characters';
     }
 
     // Validate: description
@@ -80,17 +94,17 @@ if (is_post()) {
         $_err['productPrice'] = 'Required';
     } else if (!is_money($productPrice)) {
         $_err['productPrice'] = 'Must be money';
-    } else if ($productPrice < 0.01 || $productPrice > 99.99) {
-        $_err['productPrice'] = 'Must between 0.01 - 99.99';
+    } else if ($productPrice < 0.01) {
+        $_err['productPrice'] = 'Cannot less than RM0.01';
     }
 
     // Validate: quantity
     if ($productQuantity == '') {
         $_err['productQuantity'] = 'Required';
-    } else if (!is_money($productQuantity)) {
-        $_err['productQuantity'] = 'Must be money';
-    } else if ($productQuantity < 1 || $productQuantity > 99) {
-        $_err['productQuantity'] = 'Must between 1 - 99';
+    } else if (!is_numeric($productQuantity)) {
+        $_err['roductQuantity'] = 'Must be number';
+    } else if ($productQuantity < 1) {
+        $_err['productQuantity'] = 'Cannot less than 1';
     }
 
     // Validate: status
@@ -98,15 +112,6 @@ if (is_post()) {
         $_err['productStatus'] = 'Required';
     } else if (!in_array($productStatus, ['available', 'unavailable'])) {
         $_err['productStatus'] = 'Invalid selection';
-    }
-
-    // Validate: sales count
-    if ($salesCount == '') {
-        $_err['salesCount'] = 'Required';
-    } else if (!is_money($salesCount)) {
-        $_err['salesCount'] = 'Must be money';
-    } else if ($salesCount < 1 || $salesCount > 99) {
-        $_err['salesCount'] = 'Must between 1 - 99';
     }
 
     if (empty($_err)) {
@@ -151,52 +156,70 @@ $_title = 'Product | Insert';
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="/js/insertproduct.js"></script>
 
-
+<div class="container">
+    <div class="topbar-Goback">
+        <a href="/product/productMaintenance.php">
+            <img src="/images/goBackIcon.png" alt="" width="40px" height="40px">
+        </a>
+        <div class="topbar-text">
+            <h1>Go Back</h1>
+        </div>
+    </div>
 <form method="post" class="form" enctype="multipart/form-data" novalidate>
     <h1 class="title">Insert Product</h1>
-    <label for="id">Product ID</label>
-    <?= html_text('productID', 'maxlength="4" placeholder="P999" data-upper') ?>
-    <?= err('productID') ?>
+    <div class="form-group">
+        <label for="id">Product ID: <?=$nextProductID?></label>
+        <input type="hidden" name="productID" value="<?= $nextProductID ?>">
+    </div>
 
-    <label for="id">Category ID</label>
-    <?= html_text('categoryID', 'maxlength="4" placeholder="C999" data-upper') ?>
-    <?= err('categoryID') ?>
+    <div class="form-group">
+        <label for="id">Category ID</label>
+        <?= html_select('categoryID', $categoryOptions) ?>
+        <?= err('categoryID') ?>
+    </div>
 
+    <div class="form-group">
     <label for="name">Name</label>
-    <?= html_text('productName', 'maxlength="100"') ?>
+    <?= html_text('productName', 'maxlength="30"') ?>
     <?= err('productName') ?>
+    </div>
 
-    <label for="description">Description</label>
-    <?= html_text('productDescription', 'maxlength="100"') ?>
-    <?= err('productDescription') ?>
+    <div class="form-group">
+        <label for="description">Description</label>
+        <?= html_text('productDescription', 'maxlength="255"') ?>
+        <?= err('productDescription') ?>
+    </div>
 
-    <label for="price">Price (RM)</label>
-    <?= html_number('productPrice', 0.01, 99.99, 0.01) ?>
-    <?= err('productPrice') ?>
+    <div class="form-group">
+        <label for="price">Price (RM)</label>
+        <?= html_number('productPrice', 0.01, 99.99, 0.01) ?>
+        <?= err('productPrice') ?>
+    </div>
 
-    <label for="quantity">Quantity</label>
-    <?= html_number('productQuantity', 1, 99, 1) ?>
-    <?= err('productQuantity') ?>
+    <div class="form-group">
+        <label for="quantity">Quantity</label>
+        <?= html_number('productQuantity', 1, 99, 1) ?>
+        <?= err('productQuantity') ?>
+    </div>
 
-    <label for="status">Status</label>
-    <?= html_select('productStatus', ['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
-    <?= err('productStatus') ?>
+    <div class="form-group">
+        <label for="status">Status</label>
+        <?= html_select('productStatus', ['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
+        <?= err('productStatus') ?>
+    </div>
 
-    <label for="sales">Sales Count</label>
-    <?= html_number('salesCount', 1, 99, 1) ?>
-    <?= err('salesCount') ?>
-
-    <label for="photo">Photo</label>
-    <label class="upload">
-        <?= html_file('photo[]', 'image/*', 'hidden multiple') ?>
-        <img src="/images/photo.jpg">
-    </label>
-    <?= err('photo') ?>
+    <div class="form-group">
+        <label for="photo">Photo</label>
+        <label class="upload">
+            <?= html_file('photo[]', 'image/*', 'hidden multiple') ?>
+            <img src="/images/photo.jpg">
+        </label><br/><br/><br/><br/>
+        <?= err('photo') ?>
+    </div>
 
     <section>
         <button class="formButton">Submit</button>
         <button class="formButton" type="reset">Reset</button>
     </section>
 </form>
-<?php
-//include '../footer.php';
+</div>
