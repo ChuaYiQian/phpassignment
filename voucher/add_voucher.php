@@ -52,19 +52,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="../css/insert.css">
     <title>Add Voucher</title>
 </head>
 <body>
+    <div class="container">
+        <h2>Add New Voucher</h2>
+        <form method="POST">
+            <label for="code">Code</label>
+            <input type="text" name="code" id="code" required>
 
-<h2>Add New Voucher</h2>
+            <label for="discount">Discount (%)</label>
+            <?= html_number('discount', 0, 100, 1) ?>
+            <?= err('discount') ?>
 
-<form method="POST">
-    <label>Code: <input type="text" name="code" required></label><br>
-    <label>Discount: <input type="number" name="discount" step="0.01" required></label><br>
-    <label>Expiry Date: <input type="date" name="expiry_date"></label><br>
-    <button type="submit">Add Voucher</button>
-</form>
+            <label for="expiry_date">Expiry Date</label>
+            <input type="date" name="expiry_date" id="expiry_date">
 
+            <button type="submit" class="formButton">Add Voucher</button>
+            <button type="reset" class="formButton reset">Reset</button>
+        </form>
+    </div>
 </body>
 </html>
 

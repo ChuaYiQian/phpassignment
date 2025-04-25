@@ -1,0 +1,129 @@
+/* 基础样式 */
+
+.main-container {
+    max-width: 1200px;
+    margin: 20px auto;
+}
+
+/* 卡片容器 */
+.card-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.dashboard-card {
+    flex: 1;
+    min-width: 250px;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+}
+
+.card-title {
+    font-size: 1.1em;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.card-value {
+    font-size: 2.2em;
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+/* 图表容器 */
+.chart-container {
+    display: flex;
+    gap: 30px;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.pie-chart {
+    flex: 2;
+    max-width: 500px;
+    min-height: 400px;
+}
+
+.top-products {
+    flex: 1;
+    padding-left: 30px;
+    border-left: 1px solid #eee;
+}
+
+.top-products h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.top-products ul {
+    list-style: none;
+    padding: 0;
+}
+
+
+/* 新增饼图相关样式 */
+.pie-chart canvas {
+    max-height: 400px;
+    margin: 0 auto;
+}
+
+.top-products li {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    margin-bottom: 10px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.top-products li:hover {
+    transform: translateX(5px);
+}
+
+.top-products li span:first-child {
+    flex: 2;
+    color: #2c3e50;
+}
+
+.top-products li span:last-child {
+    flex: 1;
+    text-align: right;
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .card-container {
+        flex-direction: column;
+    }
+    
+    .chart-container {
+        flex-direction: column;
+    }
+    
+    .top-products {
+        border-left: none;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
+}

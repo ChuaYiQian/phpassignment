@@ -40,22 +40,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="../css/insert.css">
     <title>Edit Voucher</title>
 </head>
 <body>
-    <h2>Edit Voucher</h2>
-    <form method="POST">
-        <label>Code: <input type="text" name="code" value="<?= htmlspecialchars($row['voucherCode'] ?? '') ?>" required></label><br>
-        <label>Discount: <input type="number" name="discount" step="0.01" value="<?= $row['discountRate'] ?? '0.00' ?>" required></label><br>
-        <label>Status:             
+<div class="container">
+        <h1>Edit Voucher</h1>
+        <form method="POST">
+            <label>Code</label>
+            <input type="text" name="code" value="<?= htmlspecialchars($row['voucherCode'] ?? '') ?>" required>
+
+            <label>Discount</label>
+            <input type="number" name="discount" step="0.01" value="<?= $row['discountRate'] ?? '0.00' ?>" required>
+
+            <label>Status</label>
             <select name="status">
                 <option value="Active" <?= isset($row['voucherStatus']) && $row['voucherStatus'] == 'Active' ? 'selected' : '' ?>>Active</option>
                 <option value="Expired" <?= isset($row['voucherStatus']) && $row['voucherStatus'] == 'Expired' ? 'selected' : '' ?>>Expired</option>
             </select>
-        </label><br>
-        <label>Expiry Date: <input type="date" name="expiry_date" value="<?= $row['endDate'] ?? '' ?>"></label><br>
-        <button type="submit">Update</button>
-    </form>
+
+            <label>Expiry Date</label>
+            <input type="date" name="expiry_date" value="<?= $row['endDate'] ?? '' ?>">
+
+            <button type="submit" class="formButton">Update</button>
+            <button type="reset" class="formButton" style="background-color: gray;">Reset</button>
+        </form>
+    </div>
 
     <script> 
     document.addEventListener("DOMContentLoaded", function() {

@@ -116,14 +116,32 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
 
                         <div class="product-delete">
-                            <form action="/cartItem/deleteCartItem.php" method="post">
+                            <form action="/cartItem/deleteCartItem.php" method="post" id="deleteForm">
                                 <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
                                 <input type="hidden" name="cartID" value="<?= $cartID ?>">
                                 <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
-                                <button type="submit" style="border: none; background-color:white;">
+                                <button type="button" onclick="showDeleteConfirmation()" style="border: none; background-color:white;">
                                     <img src="/images/deleteIcon.png" alt="Delete" width="30" height="30">
                                 </button>
                             </form>
+
+                            <div id="confirmation" class="modal-container">
+                                <div class="modal">
+                                    <section>
+                                        <span onclick="hideDeleteConfirmation()">&times;</span>
+                                        <header class="modal-header">
+                                            <h2>Are you sure you want to delete this?</h2>
+                                        </header>
+                                        <section class="modal-content">
+                                            <p>This action cannot be undone</p>
+                                        </section>
+                                        <footer class="modal-footer">
+                                            <button class="modal-button" onclick="hideDeleteConfirmation()">Cancel</button>
+                                            <button class="modal-button modal-confirm-button" onclick="confirmDelete()">Confirm</button>
+                                        </footer>
+                                    </section>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -222,6 +240,32 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('emptyCart').classList.add('animate');
         });
+
+        let deleteForm = null;
+
+        function showDeleteConfirmation() {
+            deleteForm = event.target.closest('form');
+            document.getElementById('confirmation').style.display = 'block';
+        }
+
+        function hideDeleteConfirmation() {
+            document.getElementById('confirmation').style.display = 'none';
+            deleteForm = null;
+        }
+
+        function confirmDelete() {
+            if (deleteForm) {
+                deleteForm.submit();
+            }
+            hideDeleteConfirmation();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmation');
+            if (event.target === modal) {
+                hideDeleteConfirmation();
+            }
+        }
     </script>
 </body>
 

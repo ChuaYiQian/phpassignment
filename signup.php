@@ -37,6 +37,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     $stmt->close();
 
+    // Handle profile picture upload
+    $profile_pic = 'images/default_profile.png';
+    if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] == UPLOAD_ERR_OK) {
+        $upload_dir = 'images/';
+        $file_name = uniqid() . '_' . basename($_FILES['profile_pic']['name']);
+        $target_path = $upload_dir . $file_name;
+        
+        // Check if image file is a actual image
+        $check = getimagesize($_FILES['profile_pic']['tmp_name']);
+        if ($check !== false) {
+            // Check file size (5MB max)
+            if ($_FILES['profile_pic']['size'] <= 5000000) {
+                // Allow certain file formats
+                $imageFileType = strtolower(pathinfo($target_path, PATHINFO_EXTENSION));
+                if ($imageFileType == "jpg" || $imageFileType == "png" || $imageFileType == "jpeg" || $imageFileType == "gif") {
+                    if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $target_path)) {
+                        $profile_pic = $target_path;
+                    } else {
+                        $errors[] = "Sorry, there was an error uploading your file.";
+                    }
+                } else {
+                    $errors[] = "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
+                }
+            } else {
+                $errors[] = "Sorry, your file is too large (max 5MB).";
+            }
+        } else {
+            $errors[] = "File is not an image.";
+        }
+    }
+
     // If no errors, proceed with registration
     if (empty($errors)) {
         // Hash password
@@ -44,10 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         $userID = generateUserID($conn, 'C'); // Generate customer ID starting with "C"
 
-        
-        // Default profile picture path
-        $profile_pic = 'uploads/default_profile.png';
-        
         // Prepare and execute insert statement
         $stmt = $conn->prepare("INSERT INTO user (userID, userName, userGender, userEmail, userPhoneNum, userPassword, userAddress, userProfilePicture, userStatus, userRole, userAge) 
                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', 'customer', ?)");
@@ -108,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         input[type="email"],
         input[type="password"],
         input[type="tel"],
+        input[type="file"],
         select,
         textarea {
             width: 100%;
@@ -139,7 +167,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             text-align: center;
             font-weight: bold;
         }
+        .profile-pic-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border: 3px solid #3498db;
+        }
     </style>
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const preview = document.getElementById('profilePicPreview');
+                preview.src = reader.result;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
 </head>
 <body>
     <?php include 'header.php'; ?>
@@ -160,7 +206,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <p>Registration successful! You can now <a href="home.php">login</a>.</p>
             </div>
         <?php else: ?>
-            <form action="signup.php" method="POST">
+            <form action="signup.php" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Profile Picture:</label>
+                    <img id="profilePicPreview" src="/images/default_profile.png" class="profile-pic-preview" alt="Profile Picture Preview">
+                    <input type="file" name="profile_pic" accept="image/*" onchange="previewImage(event)">
+                </div>
+                
                 <div class="form-group">
                     <label for="name">Full Name:</label>
                     <input type="text" id="name" name="name" required value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>">
