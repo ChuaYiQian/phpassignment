@@ -2,6 +2,13 @@
 include '../base.php';
 session_start();
 
+//roles validation
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
+    header("Location: ../home.php");
+    temp('error', 'You do not have permission to access this page.');
+    exit();
+}
+
 // ----------------------------------------------------------------------------
 $categoryOptions = [];
 try {
@@ -150,7 +157,6 @@ if (is_post()) {
 // ----------------------------------------------------------------------------
 
 $_title = 'Product | Insert';
-//include '../header.php';
 ?>
 <link rel="stylesheet" href="/css/insertproduct.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

@@ -2,7 +2,7 @@
 <?php include 'base.php';
 $categories = $_db->query('SELECT categoryID, categoryName FROM category WHERE categoryStatus = "Available"')->fetchAll();
 
-
+$userID = $_SESSION['user_id'];
 $category = req('category');
 $minPrice = req('minPrice');
 $maxPrice = req('maxPrice');
