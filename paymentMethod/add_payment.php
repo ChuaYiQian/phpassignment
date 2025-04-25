@@ -39,7 +39,7 @@ if (is_post()) {
     if (empty($_err)) {
         $result = $_db->query("SELECT paymentID FROM paymentMethod ORDER BY paymentID DESC LIMIT 1");
         $lastID = $result->fetchColumn();
-        $newID = $lastID ? 'P' . str_pad(substr($lastID, 1) + 1, 4, '0', STR_PAD_LEFT) : 'P0001';
+        $newID = $lastID ? 'PM' . str_pad(substr($lastID, 2) + 1, 3, '0', STR_PAD_LEFT) : 'PM001';
 
         try {
             $stm = $_db->prepare("
@@ -90,7 +90,7 @@ if (is_post()) {
                 <input type="radio" name="category" value="Online Banking" required> Online Banking
             </label>
             <label>
-                <input type="radio" name="category" value="Bank" required> FPX - Bank
+                <input type="radio" name="category" value="Bank" required> FPX Only - Bank
             </label>
             <?= err('category') ?>
 

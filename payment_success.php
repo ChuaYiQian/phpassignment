@@ -4,6 +4,12 @@ include 'base.php';
 
 $orderID = $_GET['orderID'] ?? null;
 $userID= $_SESSION['user_id'];
+$paymentID = $_GET['paymentID'] ?? null;
+$voucherID = $_SESSION['voucherID'] ?? null;
+$paymentTotal = $_GET['amount'] ?? 0;
+$taxRate = $_SESSION['taxRate'] ?? 0.06; 
+$shippingFee = $_SESSION['shippingFee'] ?? 5.00; 
+$transactionDate = date("Y-m-d");
 
 if (!$orderID) {
     $_SESSION['error'] = "Missing order ID.";
@@ -11,11 +17,17 @@ if (!$orderID) {
     exit;
 }
 
+if ($paymentID) {
+    echo "Payment ID: " . htmlspecialchars($paymentID);
+} else {
+    echo "No payment ID found.";
+}
+
 $stmt = $_db->prepare("SELECT userEmail FROM user WHERE userID = ?");
 $stmt->execute([$userID]);
-$user = $stmt->fetch(PDO::fetch_assoc);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$recipientEmail = $user ? $user['email'] : null; 
+$recipientEmail = $user ? $user['userEmail'] : null; 
 
 // Generate the Transaction ID
 function generateTransactionID($db) {
@@ -31,6 +43,29 @@ function generateTransactionID($db) {
 }
 
 $transactionID = generateTransactionID($_db);
+
+$insertStmt = $_db->prepare("
+    INSERT INTO transaction 
+    (transactionID, paymentID, orderID, voucherID, paymentTotal, taxRate, transactionDate, shippingFee)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+");
+
+$insertSuccess = $insertStmt->execute([
+    $transactionID,
+    $paymentID,
+    $orderID,
+    $voucherID,
+    $paymentTotal,
+    $taxRate,
+    $transactionDate,
+    $shippingFee
+]);
+
+if (!$insertSuccess) {
+    $_SESSION['error'] = "Failed to record the transaction.";
+    header("Location: /payment_failed.php");
+    exit;
+}
 
 // Prepare email content
 $subject = "Payment Confirmation - Order #$orderID";

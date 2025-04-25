@@ -12,7 +12,7 @@ $shippingFee = 5.00;
 // To get the tax rate from database
 $selectedPaymentID = $_POST['payment_method'] ?? null;
 $selectedMethod = null;
-$taxRate = 0.00;
+$taxRate = 0.06;
 
 if ($selectedPaymentID) {
     $stmt = $conn->prepare("SELECT * FROM paymentmethod WHERE paymentID = ?");
@@ -44,6 +44,8 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $orderID);
 $stmt->execute();
 $result = $stmt->get_result();
+
+
 
 if ($result) {
     $products = $result->fetch_all(MYSQLI_ASSOC);
@@ -155,7 +157,7 @@ $discount = $_SESSION['discount'] ?? 0;
             <?php
                 $discount = $_SESSION['discount'] ?? 0;
                 $discountAmount = $total * ($discount / 100);
-                $taxAmount = $total * $taxRate;  // Ensure taxAmount is calculated
+                $taxAmount = $total * $taxRate; 
                 $finalTotal = $total - $discountAmount + $taxAmount + $shippingFee;
             ?>
             <div class="summary">
@@ -165,40 +167,59 @@ $discount = $_SESSION['discount'] ?? 0;
                 <p>Discount: <span class="price discount-price">-RM<?= number_format($discountAmount, 2) ?></span></p>
                 <h3>Total: <span class="price">RM<?= number_format($finalTotal, 2) ?></span></h3>
             </div>
+            <input type="hidden" id="total-amount" value="<?= $total ?>">
+            <input type="hidden" id="tax-rate" value="<?= $taxRate ?>">
 
             <form id="payment-form" method="POST" action="../order/completeOrder.php">
                 <input type="hidden" name="amount" value="<?= $finalTotal ?>">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
-
+                
                 <!-- Payment Method -->
                 <div class="payment-methods">
-                    <?php foreach ($payment_methods as $method): ?>
-                        <label class="method-option">
-                            <input type="radio" name="payment_method" value="<?= htmlspecialchars($method['paymentID']) ?>" onclick="toggleFields('<?= strtolower($method['category']) ?>')" required>
-                            <img src="/<?= $method['paymentIcon'] ?>" alt="<?= $method['paymentDescription'] ?>">
-                            <?= $method['paymentDescription'] ?>
-                        </label>
+                    <?php foreach ($payment_methods as $index => $method): ?>
+                        <?php if (in_array($method['category'], ['Credit/Debit Card', 'E-wallet', 'Online Banking'])): ?>
+                            <?php $radioID = "payment_" . $index; ?>
+                            <input 
+                                type="radio" 
+                                id="<?= $radioID ?>"
+                                name="payment_method"
+                                value="<?= htmlspecialchars($method['paymentID']) ?>"
+                                data-category="<?= htmlspecialchars($method['category']) ?>"required>
+                                <label class="method-option" for="<?= $radioID ?>">
+                                <img src="/<?= $method['paymentIcon'] ?>" alt="<?= $method['paymentDescription'] ?>">
+                                <?= $method['paymentDescription'] ?>
+                            </label>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
 
                 <!-- Card Details -->
-                <div id="card-details" class="card-fields">
-                    <input type="text" name="card_number" placeholder="Card Number">
-                    <input type="text" name="card_expiry" placeholder="Expiry (MM/YY)">
-                    <input type="text" name="card_cvv" placeholder="CVV">
+                <div id="card-fields"  class="card-fields" style="display: none;">
+                    <label>Card Number:
+                        <input type="text" id="cardNumber" name="cardNumber" maxlength="16"
+                            value="<?= $_SESSION['card_number'] ?? '' ?>">
+                    </label><br>
+                    <label>Expiry Date (MM/YY):
+                        <input type="text" id="expiry" name="expiry"
+                            value="<?= $_SESSION['expiry'] ?? '' ?>">
+                    </label><br>
+                    <label>CVV:
+                        <input type="text" id="cvv" name="cvv" maxlength="3"
+                            value="<?= $_SESSION['cvv'] ?? '' ?>">
+                    </label>
                 </div>
 
                 <!-- Tng -->
-                <div id="tng" class="paidtng">
+                <div id="e-wallet" class="paidtng" style="display: none;">
                     <label>Please Scan the QR to Pay</label>
-                    <img src="/images/paidtng.jpg" alt="tng">
+                    <img src="/images/paidtng.jpg" alt="e-wallet">
                 </div>
 
                 <!-- Bank Options -->
                 <div id="bank-list" class="bank-list">
                     <label>Select Bank:</label>
                     <?php foreach ($payment_methods as $method): ?>
-                        <?php if ($method['category'] == 'Online Banking'): ?>
+                        <?php if ($method['category'] == 'Bank'): ?>
                             <label class="bank-option">
                                 <input type="radio" name="bank" value="<?= htmlspecialchars($method['paymentID']) ?>">
                                 <img src="/<?= $method['paymentIcon'] ?>" alt="<?= $method['paymentDescription'] ?>">
@@ -215,57 +236,81 @@ $discount = $_SESSION['discount'] ?? 0;
     </div>
 
     <script>
-    function toggleFields(method) {
-        const cardFields = document.getElementById('card-details');
-        const paidtng = document.getElementById('tng');
-        const bankList = document.getElementById('bank-list');
+        document.addEventListener("DOMContentLoaded", function () {
+            const methodRadios = document.querySelectorAll('input[name="payment_method"]');
+            const cardFields = document.getElementById('card-fields');
+            const paidtng = document.getElementById('e-wallet');
+            const bankList = document.getElementById('bank-list');
 
-        cardFields.style.display = method === 'card' ? 'block' : 'none';
-        paidtng.style.display = 'none';
-        bankList.style.display = method === 'fpx' ? 'block' : 'none';
-    }
+            // Hide all by default
+            cardFields.style.display = "none";
+            paidtng.style.display = "none";
+            bankList.style.display = "none";
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const methodRadios = document.querySelectorAll('input[name="payment_method"]');
-        const cardFields = document.getElementById('card-details');
-        const paidtng = document.getElementById('tng');
-        const bankList = document.getElementById('bank-list');
+            methodRadios.forEach(radio => {
+                radio.addEventListener("change", function () {
+                    const category = this.getAttribute('data-category');
+                    console.log("Selected category:", category); // Add debug here
+                    toggleFields(category);
+                });
+            });
 
-        // Hide all by default
-        cardFields.style.display = "none";
-        paidtng.style.display = "none";
-        bankList.style.display = "none";
+            function toggleFields(category) {
+            const cardFields = document.getElementById('card-fields');
+            const paidtng = document.getElementById('e-wallet');
+            const bankList = document.getElementById('bank-list');
 
-        methodRadios.forEach(radio => {
-            radio.addEventListener("change", function () {
-                toggleFields(this.value);
+            // Hide all by default
+            cardFields.style.display = 'none';
+            paidtng.style.display = 'none';
+            bankList.style.display = 'none';
+
+            // Based on the category to show the details
+            if (category.toLowerCase() === 'credit/debit card') {
+                cardFields.style.display = 'block';
+            } else if (category.toLowerCase() === 'e-wallet') {
+                paidtng.style.display = 'block';
+            } else if (category.toLowerCase() === 'online banking') {
+                bankList.style.display = 'block';
+            }
+        }
+
+            // Form validation
+            const form = document.getElementById("payment-form");
+            form.addEventListener("submit", function (e) {
+                const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+                if (!selectedPayment) {
+                    alert("Please select a payment method.");
+                    e.preventDefault();
+                    return;
+                }
+
+                const category = selectedPayment.getAttribute('data-category');
+                if (category.toLowerCase() === 'credit/debit card') {
+                    const cardNumber = document.getElementById('cardNumber').value.trim();
+                    const expiry = document.getElementById('expiry').value.trim();
+                    const cvv = document.getElementById('cvv').value.trim();
+
+                    if (!/^\d{16}$/.test(cardNumber)) {
+                        alert("Invalid card number. Must be 16 digits.");
+                        e.preventDefault();
+                        return;
+                    }
+
+                    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+                        alert("Invalid expiry date. Format should be MM/YY.");
+                        e.preventDefault();
+                        return;
+                    }
+
+                    if (!/^\d{3}$/.test(cvv)) {
+                        alert("Invalid CVV. Must be 3 digits.");
+                        e.preventDefault();
+                        return;
+                    }
+                }
             });
         });
-
-        // Form validation
-        const form = document.getElementById("payment-form");
-        form.addEventListener("submit", function (e) {
-            const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
-            if (!selectedPayment) {
-                alert("Please select a payment method.");
-                e.preventDefault();
-                return;
-            }
-
-            const method = selectedPayment.value;
-
-            if (method === "card") {
-                const cardNumber = document.querySelector('input[name="card_number"]').value.trim();
-                const expiry = document.querySelector('input[name="card_expiry"]').value.trim();
-                const cvv = document.querySelector('input[name="card_cvv"]').value.trim();
-
-                if (!cardNumber || !expiry || !cvv) {
-                    alert("Please complete card details.");
-                    e.preventDefault();
-                }
-            }
-        });
-    });
     </script>
 </body>
 </html>
