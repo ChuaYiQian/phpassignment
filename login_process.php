@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_name'] = $admin['userName'];
             $_SESSION['user_role'] = $admin['userRole'];
             $_SESSION['user_status'] = $admin['userStatus'];
+            $_SESSION['user_profile_pic'] = $admin['userProfilePicture']; // Add this line
             header("Location: admin_dashboard.php");
             exit();
         } else {
@@ -24,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Regular login process for other users
-    $stmt = $conn->prepare("SELECT userID, userName, userPassword, userRole, userStatus FROM user WHERE (userEmail = ? OR userName = ?)");
+    $stmt = $conn->prepare("SELECT userID, userName, userPassword, userRole, userStatus, userProfilePicture FROM user WHERE (userEmail = ? OR userName = ?)");
     $stmt->bind_param("ss", $username, $username);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -45,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_name'] = $user['userName'];
             $_SESSION['user_role'] = $user['userRole'];
             $_SESSION['user_status'] = $user['userStatus'];
+            $_SESSION['user_profile_pic'] = $user['userProfilePicture']; // Add this line
             
             // Redirect based on role
             if ($user['userRole'] == 'admin') {
