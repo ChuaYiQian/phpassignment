@@ -1,31 +1,29 @@
-    <?php
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-    // Ensure profile picture is set in session
-    if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
-        require_once 'base.php';
-        $stmt = $conn->prepare("SELECT userProfilePicture FROM user WHERE userID = ?");
-        $stmt->bind_param("s", $_SESSION['user_id']);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($result->num_rows == 1) {
-            $user = $result->fetch_assoc();
-            $_SESSION['user_profile_pic'] = $user['userProfilePicture'];
-        }
-        $stmt->close();
-        $conn->close();
+// Ensure profile picture is set in session
+if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
+    require_once 'base.php';
+    $stmt = $conn->prepare("SELECT userProfilePicture FROM user WHERE userID = ?");
+    $stmt->bind_param("s", $_SESSION['user_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows == 1) {
+        $user = $result->fetch_assoc();
+        $_SESSION['user_profile_pic'] = $user['userProfilePicture'];
     }
-    ?>
-    <!DOCTYPE html>
+    $stmt->close();
+}
+?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/header.css">
     <style>
-        /* Profile Dropdown Styles */
         .profile-dropdown {
             position: relative;
             display: inline-block;
@@ -89,103 +87,52 @@
         .logout-btn:hover {
             background-color: #f1f1f1;
         }
-
-        /* Popup Styles */
-        .popup {
-            display: none;
-            
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
-
-        .popup-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 20px;
-            width: 80%;
-            max-width: 400px;
-            border-radius: 5px;
-            position: relative;
-        }
-
-        .popup .close {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .error-message {
-            color: #d9534f;
-            background-color: #f2dede;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-
-        .success-message {
-            color: #3c763d;
-            background-color: #dff0d8;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-
-        /* Login Button Styles */
-        .login-btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .login-btn:hover {
-            background-color: #45a049;
-        }
     </style>
 </head>
-<body>
-    <header>
-        <h1>PopZone Collectibles</h1>
-        <nav>
-            <ul>
-                <li><a href="/home.php">Home</a></li>
-                <li><a href="/product.php">Products</a></li>
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <li>
-                        <a href="/cart/cart.php">
-                            <img src="/images/addToCart.png" style="width: 30px; height: 30px;" alt="Cart">
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/order/userOrder.php">
-                            <img src="/images/orderIcon.jpg" style="width: 30px; height: 30px;" alt="Orders">
-                        </a>
-                    </li>
-                    <li class="profile-dropdown">
-                        <button class="profile-btn">
-                            <img src="<?php echo htmlspecialchars($_SESSION['user_profile_pic'] ?? '/uploads/default_profile.png'); ?>" class="profile-img" alt="Profile">
-                        </button>
-                        <div class="dropdown-content">
-                            <a href="/view_profile.php">View Profile</a>
-                            <form action="/logout.php" method="POST" style="display:inline;">
-                                <button type="submit" class="logout-btn">Logout</button>
-                            </form>
-                        </div>
-                    </li>
-                <?php else: ?>
-                    <li><button class="login-btn" onclick="openLoginPopup()">Login</button></li>
-                <?php endif; ?>
-            </ul>
-        </nav>
-    </header>
+<header>
+    <h1>PopZone Collectibles</h1>
+    <nav>
+        <ul>
+            <li><a href="/home.php">Home</a></li>
+            <li><a href="/product.php">Products</a></li>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <li>
+                    <a href="/cart/cart.php">
+                        <img src="/images/addToCart.png" style="width: 30px; height: 30px;">
+                    </a>
+                </li>
+                <li>
+                    <a href="/order/userOrder.php">
+                        <img src="/images/orderIcon.jpg" style="width: 30px; height: 30px;">
+                    </a>
+                </li>
+                <li class="profile-dropdown">
+                    <button class="profile-btn">
+                        <img src="<?php echo htmlspecialchars($_SESSION['user_profile_pic'] ?? '/uploads/default_profile.png'); ?>" class="profile-img" alt="Profile">
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="/view_profile.php">View Profile</a>
+                        <form action="/logout.php" method="POST" style="display:inline;">
+                            <button type="submit"  class="logout-btn">Logout</button>
+                        </form>
+                    </div>
+                </li>
+            <?php else: ?>
+                <li><button class="login-btn" onclick="openLoginPopup()">Login</button></li>
+            <?php endif; ?>
+        </ul>
+    </nav>
+</header>
+<div id="loginPopup" class="popup" style="z-index: 99;">
+    <div class="popup-content">
+        <span class="close" onclick="closeLoginPopup()">&times;</span>
+        <h2>Login</h2>
+        <form action="login_process.php" method="POST">
+            <!-- Error message container -->
+            <div id="loginError" class="error-message" style="display: none;"></div>
+            
+            <label for="username">Username/Email:</label>
+            <input type="text" id="username" name="username" value="admin" required>
 
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" value="admin" required>
@@ -213,7 +160,7 @@
         <span class="close" onclick="closeLogoutPopup()">&times;</span>
         <h2>Logout Successful!</h2>
         <p>You have been successfully logged out.</p>
-        <button class="popup-button" onclick="closeLogoutPopup()">OK</button>
+        <button onclick="closeLogoutPopup()">OK</button>
     </div>
 </div>
 
@@ -242,12 +189,12 @@
     }
 
     function openLogoutPopup() {
-    document.getElementById("logoutPopup").style.display = "flex"; 
-}
+        document.getElementById("logoutPopup").style.display = "block";
+    }
 
-function closeLogoutPopup() {
-    document.getElementById("logoutPopup").style.display = "none";
-}
+    function closeLogoutPopup() {
+        document.getElementById("logoutPopup").style.display = "none";
+    }
 
     function showLoginError(message) {
         const errorElement = document.getElementById('loginError');

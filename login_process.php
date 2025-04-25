@@ -2,22 +2,11 @@
 session_start();
 require_once 'base.php';
 
-header('Content-Type: application/json');
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = trim($_POST['username']);
-    $password = trim($_POST['password']);
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-    // Validate inputs
-    if (empty($username) || empty($password)) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Please enter both username and password'
-        ]);
-        exit();
-    }
-
-    // Check for default admin credentials
+    // Check for default admin credentials first
     if ($username === 'admin' && $password === 'admin') {
         $result = $conn->query("SELECT * FROM user WHERE userID = 'A0001' AND userStatus = 'active'");
         if ($result->num_rows == 1) {
@@ -30,15 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header("Location: admin_dashboard.php");
             exit();
         } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Default admin account not found or inactive'
-            ]);
             exit();
         }
     }
 
-    // Regular login process
+    // Regular login process for other users
     $stmt = $conn->prepare("SELECT userID, userName, userPassword, userRole, userStatus, userProfilePicture FROM user WHERE (userEmail = ? OR userName = ?)");
     $stmt->bind_param("ss", $username, $username);
     $stmt->execute();
@@ -47,13 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($result->num_rows == 1) {
         $user = $result->fetch_assoc();
         
+        // Check if account is active
         if ($user['userStatus'] != 'active') {
             $_SESSION['login_error'] = "Your account has been blocked. Please contact an administrator.";
             header("Location: home.php");
             exit();
         }
         
+        // Verify password
         if (password_verify($password, $user['userPassword'])) {
+            // Set session variables
             $_SESSION['user_id'] = $user['userID'];
             $_SESSION['user_name'] = $user['userName'];
             $_SESSION['user_role'] = $user['userRole'];
@@ -87,10 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     $stmt->close();
 } else {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Invalid request method'
-    ]);
+    header("Location: home.php");
     exit();
 }
 ?>
