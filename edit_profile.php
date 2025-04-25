@@ -2,13 +2,12 @@
 session_start();
 require_once 'base.php';
 
-// Check permissions
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: home.php");
     exit();
 }
 
-$user_id = $_GET['id'] ?? '';
+$user_id = $_SESSION['user_id'];
 $user = [];
 $errors = [];
 $success = false;
@@ -21,15 +20,8 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $stmt->close();
 
-// Check if user exists
 if (!$user) {
-    header("Location: admin_dashboard.php");
-    exit();
-}
-
-// Check permissions (admin can edit anyone, staff can only edit customers)
-if ($_SESSION['user_role'] == 'staff' && $user['userRole'] != 'customer') {
-    header("Location: admin_dashboard.php");
+    header("Location: home.php");
     exit();
 }
 
@@ -40,6 +32,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $phone = trim($_POST['phone']);
     $address = trim($_POST['address']);
     $age = intval($_POST['age']);
+    
+    // Handle file upload
+    $profile_pic = $user['userProfilePicture'];
+    if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] == UPLOAD_ERR_OK) {
+        $upload_dir = 'images/';
+        $file_name = uniqid() . '_' . basename($_FILES['profile_pic']['name']);
+        $target_path = $upload_dir . $file_name;
+        
+        // Check if image file is a actual image
+        $check = getimagesize($_FILES['profile_pic']['tmp_name']);
+        if ($check !== false) {
+            // Check file size (5MB max)
+            if ($_FILES['profile_pic']['size'] <= 5000000) {
+                // Allow certain file formats
+                $imageFileType = strtolower(pathinfo($target_path, PATHINFO_EXTENSION));
+                if ($imageFileType == "jpg" || $imageFileType == "png" || $imageFileType == "jpeg" || $imageFileType == "gif") {
+                    if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $target_path)) {
+                        // Delete old profile picture if it's not the default
+                        if ($profile_pic != 'images/default_profile.png' && file_exists($profile_pic)) {
+                            unlink($profile_pic);
+                        }
+                        $profile_pic = $target_path;
+                    } else {
+                        $errors[] = "Sorry, there was an error uploading your file.";
+                    }
+                } else {
+                    $errors[] = "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
+                }
+            } else {
+                $errors[] = "Sorry, your file is too large (max 5MB).";
+            }
+        } else {
+            $errors[] = "File is not an image.";
+        }
+    }
 
     // Validation
     if (empty($name)) $errors[] = "Name is required";
@@ -58,10 +85,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->close();
 
     if (empty($errors)) {
-        $stmt = $conn->prepare("UPDATE user SET userName = ?, userGender = ?, userEmail = ?, userPhoneNum = ?, userAddress = ?, userAge = ? WHERE userID = ?");
-        $stmt->bind_param("sssssis", $name, $gender, $email, $phone, $address, $age, $user_id);
+        $stmt = $conn->prepare("UPDATE user SET userName = ?, userGender = ?, userEmail = ?, userPhoneNum = ?, userAddress = ?, userAge = ?, userProfilePicture = ? WHERE userID = ?");
+        $stmt->bind_param("sssssiss", $name, $gender, $email, $phone, $address, $age, $profile_pic, $user_id);
 
         if ($stmt->execute()) {
+            // Update all session variables
+            $_SESSION['user_name'] = $name;
+            $_SESSION['user_profile_pic'] = $profile_pic;
+            
             $success = true;
         } else {
             $errors[] = "Update failed. Please try again.";
@@ -75,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit User - PopZone Collectibles</title>
+    <title>Edit Profile - PopZone Collectibles</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -124,6 +155,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             box-sizing: border-box;
         }
         
+        .profile-pic-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border: 3px solid #3498db;
+        }
+        
         .btn {
             display: inline-block;
             color: #fff;
@@ -133,8 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             cursor: pointer;
             text-decoration: none;
             font-size: 16px;
-            height: 40px; /* Fixed height for both buttons */
-            line-height: 20px; /* Center text vertically */
+            height: 40px;
+            line-height: 20px;
             box-sizing: border-box;
         }
         
@@ -175,12 +215,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             margin-top: 20px;
         }
     </style>
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const preview = document.getElementById('profilePicPreview');
+                preview.src = reader.result;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
 </head>
 <body>
     <?php include 'header.php'; ?>
     
     <div class="container">
-        <h1>Edit User <?= htmlspecialchars($user['userID']) ?></h1>
+        <h1>Edit Profile</h1>
         
         <?php if (!empty($errors)): ?>
             <div class="error">
@@ -192,11 +242,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         <?php if ($success): ?>
             <div class="success">
-                <p>User updated successfully!</p>
-                <a href="admin_dashboard.php" class="btn">Back to Dashboard</a>
+                <p>Profile updated successfully!</p>
+                <a href="view_profile.php" class="btn">View Profile</a>
             </div>
         <?php else: ?>
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Profile Picture:</label>
+                    <img id="profilePicPreview" src="<?= htmlspecialchars($user['userProfilePicture']) ?>" class="profile-pic-preview" alt="Current Profile Picture">
+                    <input type="file" name="profile_pic" accept="image/*" onchange="previewImage(event)">
+                </div>
+                
                 <div class="form-group">
                     <label for="name">Full Name:</label>
                     <input type="text" id="name" name="name" value="<?= htmlspecialchars($user['userName']) ?>" required>
@@ -230,8 +286,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <input type="number" id="age" name="age" min="13" value="<?= htmlspecialchars($user['userAge']) ?>" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">Update User</button>
-                <a href="admin_dashboard.php" class="btn btn-secondary">Cancel</a>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                    <a href="view_profile.php" class="btn btn-secondary">Cancel</a>
+                </div>
             </form>
         <?php endif; ?>
     </div>

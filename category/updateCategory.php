@@ -31,13 +31,20 @@ if (is_post()) {
         $_err['categoryName'] = 'Maximum 100 characters';
     }
 
+    // Validate: status
+    if (!$categoryStatus) {
+        $_err['categoryStatus'] = 'Required';
+    } else if (!in_array($categoryStatus, ['available', 'unavailable'])) {
+        $_err['categoryStatus'] = 'Invalid selection';
+    }
+
     if (empty($_err)) {
         try {
             $stm = $_db->prepare('
-                UPDATE category SET categoryName=? WHERE categoryID=?
+                UPDATE category SET categoryName=?, categoryStatus=? WHERE categoryID=?
             ');
     
-            $stm->execute([$categoryName, $categoryID]);
+            $stm->execute([$categoryName, $categoryStatus, $categoryID]);
     
             temp('info', 'Record updated successfully');
             header('Location: /category/categoryMaintenance.php');
@@ -51,23 +58,30 @@ if (is_post()) {
 // ----------------------------------------------------------------------------
 
 $_title = 'Category | Update';
-include '../header.php';
 ?>
 <link rel="stylesheet" href="/css/insertproduct.css">
 
 <form method="post" class="form" enctype="multipart/form-data" novalidate>
+    <h1 class="title">Update Category</h1>
+    <div class="form-group">
     <label for="id">Category ID: <?php echo $categoryID ?></label>
     <?= html_hidden('categoryID'); ?>
+    </div>
 
+    <div class="form-group">
     <label for="name">Name</label>
     <?= html_text('categoryName', 'maxlength="100"') ?>
     <?= err('categoryName') ?>
+    </div>
+
+    <div class="form-group">
+    <label for="status">Status</label>
+    <?= html_select('categoryStatus', ['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
+        <?= err('categoryStatus') ?>
+    </div>
 
     <section>
         <button>Submit</button>
         <button type="reset">Reset</button>
     </section>
 </form>
-
-<?php
-include '../footer.php';

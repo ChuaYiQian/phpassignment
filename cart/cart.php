@@ -18,14 +18,25 @@ if (!$cart) {
 }
 
 $cartID = $cart->cartID;
+$_db->prepare("
+    DELETE ci FROM cartItem ci
+    JOIN product p ON ci.productID = p.productID
+    JOIN category c ON p.categoryID = c.categoryID
+    WHERE ci.cartID = ?
+    AND (p.productStatus != 'Available' OR c.categoryStatus != 'Available')
+")->execute([$cartID]);
 
 $stmt = $_db->prepare("
     SELECT c.productID, c.cartQuantity, p.productName, p.productDescription, 
            p.productPrice, p.productQuantity, p.productPicture 
     FROM cartItem c
     JOIN product p ON c.productID = p.productID
+    JOIN category cat ON p.categoryID = cat.categoryID
     WHERE c.cartID = ?
+    AND p.productStatus = 'Available'
+    AND cat.categoryStatus = 'Available'
 ");
+
 $stmt->execute([$cartID]);
 $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>

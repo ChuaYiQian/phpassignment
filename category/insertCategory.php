@@ -4,9 +4,23 @@ session_start();
 
 // ----------------------------------------------------------------------------
 
+try {
+    $stmt = $_db->query("SELECT COUNT(*) FROM category");
+    $categoryCount = $stmt->fetchColumn();
+    $nextCategoryID = 'C' . str_pad($categoryCount + 1, 3, '0', STR_PAD_LEFT);
+} catch (PDOException $e) {
+    die("Error generating category ID: " . $e->getMessage());
+}
+
+if (!is_post()) {
+    $_POST['categoryID'] = $nextCategoryID;
+}
+
+
 if (is_post()) {
     $categoryID = req('categoryID');
     $categoryName = req("categoryName");
+    $categoryStatus = req('categoryStatus');
 
     // Validate: product id
     if ($categoryID == '') {
@@ -27,14 +41,21 @@ if (is_post()) {
         $_err['categoryName'] = 'Maximum 100 characters';
     }
 
+    // Validate: status
+    if (!$categoryStatus) {
+        $_err['categoryStatus'] = 'Required';
+    } else if (!in_array($categoryStatus, ['available', 'unavailable'])) {
+        $_err['categoryStatus'] = 'Invalid selection';
+    }
+
     if (empty($_err)) {
         try {
             $stm = $_db->prepare('
-                INSERT INTO category (categoryID, categoryName)
-                VALUES (?, ?)
+                INSERT INTO category (categoryID, categoryName, categoryStatus)
+                VALUES (?, ?, ?)
             ');
     
-            $stm->execute([$categoryID, $categoryName]);
+            $stm->execute([$categoryID, $categoryName, $categoryStatus]);
     
             temp('info', 'Record inserted successfully');
             header('Location: /category/categoryMaintenance.php');
@@ -48,23 +69,40 @@ if (is_post()) {
 // ----------------------------------------------------------------------------
 
 $_title = 'Category | Insert';
-include '../header.php';
 ?>
 <link rel="stylesheet" href="/css/insertproduct.css">
-
+<div class="container">
+    <div class="topbar-Goback">
+        <a href="/category/categoryMaintenance.php">
+            <img src="/images/goBackIcon.png" alt="" width="40px" height="40px">
+        </a>
+        <div class="topbar-text">
+            <h1>Go Back</h1>
+        </div>
+    </div>
 <form method="post" class="form" enctype="multipart/form-data" novalidate>
-    <label for="id">Category ID</label>
-    <?= html_text('categoryID', 'maxlength="4" placeholder="C999" data-upper') ?>
+    <h1 class="title">Insert Category</h1>
+    <div class="form-group">
+    <label for="id">Category ID: <?= $nextCategoryID ?></label>
+    <input type="hidden" name="categoryID" value="<?= $nextCategoryID ?>">
     <?= err('categoryID') ?>
+    </div>
 
+    <div class="form-group">
     <label for="name">Name</label>
     <?= html_text('categoryName', 'maxlength="100"') ?>
     <?= err('categoryName') ?>
+    </div>
+
+    <div class="form-group">
+    <label for="status">Status</label>
+    <?= html_select('categoryStatus', ['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
+    <?= err('categoryStatus') ?>
+    </div>
 
     <section>
         <button>Submit</button>
         <button type="reset">Reset</button>
     </section>
 </form>
-<?php
-include '../footer.php';
+</div>
