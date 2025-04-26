@@ -8,7 +8,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
     exit();
 }
 
-
 $categories = $_db->query('SELECT categoryID, categoryName FROM category WHERE categoryStatus = "Available"')->fetchAll();
 
 $category = req('category');
