@@ -17,10 +17,10 @@ if (!$orderID) {
     exit;
 }
 
-if ($paymentID) {
-    echo "Payment ID: " . htmlspecialchars($paymentID);
+if ($orderID) {
+    echo "Order ID: " . htmlspecialchars($orderID);
 } else {
-    echo "No payment ID found.";
+    echo "No order ID found.";
 }
 
 $stmt = $_db->prepare("SELECT userEmail, userAddress FROM user WHERE userID = ?");
