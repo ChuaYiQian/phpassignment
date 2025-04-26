@@ -4,7 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 // Check if admin is logged in
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
-    header("Location: home.php");
+    header("Location: ../home.php");
+    temp('error', 'You do not have permission to access this page.');
     exit();
 }
 
