@@ -108,6 +108,14 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <button type="submit" class="btn btn-sort">Sort</button>
                 </div>
             </form>
+            <div class="export-group">
+                <a href="exportOrdersExcel.php?<?= http_build_query($_GET) ?>" class="btn btn-export">
+                    Excel
+                </a>
+                <a href="exportOrdersPdf.php?<?= http_build_query($_GET) ?>" class="btn btn-export-pdf">
+                    PDF
+                </a>
+            </div>
         </div>
 
         <div class="total-records">
@@ -131,19 +139,19 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <td><?= $offset + $index + 1 ?></td>
                         <td><?= htmlspecialchars($order['orderID']) ?></td>
                         <td><?= htmlspecialchars($order['userName']) ?></td>
-                        <td><?= date('d/m/Y H:i', strtotime($order['orderDate'])) ?></td>
+                        <td><?= date('d/m/Y', strtotime($order['orderDate'])) ?></td>
                         <td>
                             <span class="status-badge status-<?= $order['orderStatus'] ?>">
                                 <?= ucfirst($order['orderStatus']) ?>
                             </span>
                         </td>
                         <td class="action-btns" style="border-left: 1px solid #ddd;">
-                        <a href="../orderInformation/maintenanceOrderInfo.php?orderID=<?= $order['orderID'] ?>" 
-                        class="btn btn-view">View Detail</a>
+                            <a href="../orderInformation/maintenanceOrderInfo.php?orderID=<?= $order['orderID'] ?>"
+                                class="btn btn-view">View Detail</a>
                             <?php if ($order['orderStatus'] == 'payed'): ?>
                                 <form method="post" action="sendOutOrder.php" style="display:inline;">
                                     <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
-                                    <button type="submit" class="btn btn-view">Sent Out</button>
+                                    <button type="button" onclick="showDeleteConfirmation()" onclick="showDeleteConfirmation()" class="btn btn-view">Sent Out</button>
                                 </form>
                             <?php endif; ?>
                         </td>
@@ -171,7 +179,49 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
         </div>
     </div>
+    <div id="confirmation" class="modal-container">
+        <div class="modal">
+            <section>
+                <header class="modal-header">
+                    <h2>Are you sure you want to delete this?</h2>
+                </header>
+                <section class="modal-content">
+                    <p>This action cannot be undone</p>
+                </section>
+                <footer class="modal-footer">
+                    <button class="modal-button" onclick="hideDeleteConfirmation()">Cancel</button>
+                    <button class="modal-button modal-confirm-button" onclick="confirmDelete()">Confirm</button>
+                </footer>
+            </section>
+        </div>
+    </div>
+    <script>
+        let deleteForm = null;
 
+        function showDeleteConfirmation() {
+            deleteForm = event.target.closest('form');
+            document.getElementById('confirmation').style.display = 'block';
+        }
+
+        function hideDeleteConfirmation() {
+            document.getElementById('confirmation').style.display = 'none';
+            deleteForm = null;
+        }
+
+        function confirmDelete() {
+            if (deleteForm) {
+                deleteForm.submit();
+            }
+            hideDeleteConfirmation();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmation');
+            if (event.target === modal) {
+                hideDeleteConfirmation();
+            }
+        }
+    </script>
 </body>
 
 </html>
