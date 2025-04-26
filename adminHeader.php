@@ -190,6 +190,9 @@ if (!isset($_SESSION['user_profile_pic'])) {
         <div class="side-btn">
             <a href="/payment_table.php">Payment Methods</a>
         </div>
+        <div class="side-btn">
+            <a href="/transaction_table.php">Transaction</a>
+        </div>
     </div>
     <div class="adminheader">
         <h1>Admin Panel</h1>
