@@ -157,6 +157,7 @@ $discount = $_SESSION['discount'] ?? 0;
                 $discountAmount = $total * ($discount / 100);
                 $taxAmount = $total * $taxRate; 
                 $finalTotal = $total - $discountAmount + $taxAmount + $shippingFee;
+                $finalTotal = round($finalTotal, 2);
             ?>
             <div class="summary">
                 <p>Subtotal: <span class="price">RM<?= number_format($total, 2) ?></span></p>
@@ -167,7 +168,7 @@ $discount = $_SESSION['discount'] ?? 0;
             </div>
 
             <form id="payment-form" method="POST" action="../order/completeOrder.php">
-                <input type="hidden" name="amount" value="<?= $finalTotal ?>">
+                <input type="hidden" name="amount" value="<?= number_format($finalTotal, 2, '.', '') ?>">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
                 <input type="hidden" name="voucherID" value="<?= $_SESSION['voucherID'] ?? null ?>">
 

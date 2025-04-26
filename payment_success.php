@@ -6,7 +6,7 @@ $orderID = $_GET['orderID'] ?? null;
 $userID= $_SESSION['user_id'];
 $paymentID = $_GET['paymentID'] ?? null;
 $voucherID = $_SESSION['voucherID'] ?? null;
-$paymentTotal = $_GET['amount'] ?? 0;
+$paymentTotal = floatval($_GET['amount'] ?? 0);
 $taxRate = $_SESSION['taxRate'] ?? 0.06; 
 $shippingFee = $_SESSION['shippingFee'] ?? 5.00; 
 $transactionDate = date("Y-m-d");
@@ -17,10 +17,10 @@ if (!$orderID) {
     exit;
 }
 
-if ($paymentID) {
-    echo "Payment ID: " . htmlspecialchars($paymentID);
+if ($orderID) {
+    echo "Order ID: " . htmlspecialchars($orderID);
 } else {
-    echo "No payment ID found.";
+    echo "No order ID found.";
 }
 
 $stmt = $_db->prepare("SELECT userEmail, userAddress FROM user WHERE userID = ?");
