@@ -2,6 +2,12 @@
 include '../base.php';
 session_start();
 
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
+    header("Location: ../home.php");
+    temp('error', 'You do not have permission to access this page.');
+    exit();
+}
+
 if ($msg = temp('info')) {
     echo "<div class='success-message'>$msg</div>";
 } elseif ($msg = temp('error')) {

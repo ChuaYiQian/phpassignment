@@ -91,10 +91,14 @@ try {
     <title>Admin Dashboard - PopZone Collectibles</title>
     <link rel="stylesheet" href="/css/dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/home.js"></script>
 </head>
 <body>
     <?php include 'adminheader.php'; ?>
-
+<?php if ($msg = temp('error')): ?>
+    <div class="popup-message error"><?= htmlspecialchars($msg) ?></div>
+<?php endif; ?>
     <div class="main-container">
     <div class="card-container">
             <div class="dashboard-card">
