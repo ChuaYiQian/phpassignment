@@ -34,8 +34,8 @@ if (is_post()) {
     if ($categoryName == '') {
         $_err['categoryName'] = 'Required';
     }
-    else if (strlen($categoryName) > 100) {
-        $_err['categoryName'] = 'Maximum 100 characters';
+    else if (strlen($categoryName) > 15) {
+        $_err['categoryName'] = 'Maximum 15 characters';
     }
 
     // Validate: status
@@ -77,7 +77,7 @@ $_title = 'Category | Update';
 
     <div class="form-group">
     <label for="name">Name</label>
-    <?= html_text('categoryName', 'maxlength="100"') ?>
+    <?= html_text('categoryName', 'maxlength="15"') ?>
     <?= err('categoryName') ?>
     </div>
 

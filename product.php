@@ -2,11 +2,11 @@
 <?php include 'base.php';
 $categories = $_db->query('SELECT categoryID, categoryName FROM category WHERE categoryStatus = "Available"')->fetchAll();
 
-$userID = $_SESSION['user_id'];
 $category = req('category');
 $minPrice = req('minPrice');
 $maxPrice = req('maxPrice');
 $productName = req('productName');
+$sort = req('sort');
 
 $where = [];
 $params = [];
@@ -35,6 +35,21 @@ $sql = 'SELECT p.* FROM product p
 
 if ($where) {
     $sql .= ' AND ' . implode(' AND ', $where);
+}
+
+switch ($sort) {
+    case 'price_asc':
+        $sql .= ' ORDER BY p.productPrice ASC';
+        break;
+    case 'price_desc':
+        $sql .= ' ORDER BY p.productPrice DESC';
+        break;
+    case 'bestseller':
+        $sql .= ' ORDER BY p.salesCount DESC';
+        break;
+    default:
+        $sql .= ' ORDER BY p.productID DESC'; // or any default sorting you prefer
+        break;
 }
 
 $stm = $_db->prepare($sql);
@@ -70,11 +85,22 @@ $arr = $stm->fetchAll();
                     <?php endforeach ?>
                 </select><br><br>
 
+                <label for="sort">Sort By:</label><br>
+                <select name="sort" id="sort">
+                    <option value="">Default</option>
+                    <option value="price_asc" <?= req('sort') == 'price_asc' ? 'selected' : '' ?>>Price: Low to High
+                    </option>
+                    <option value="price_desc" <?= req('sort') == 'price_desc' ? 'selected' : '' ?>>Price: High to Low
+                    </option>
+                    <option value="bestseller" <?= req('sort') == 'bestseller' ? 'selected' : '' ?>>Best Seller</option>
+                </select><br><br>
+
+
                 <label for="minPrice">Min Price:</label><br>
-                <input type="number" name="minPrice" id="minPrice" min="0"><br><br>
+                <input type="number" name="minPrice" id="minPrice" min="0" value="<?= $minPrice ?>"><br><br>
 
                 <label for="maxPrice">Max Price:</label><br>
-                <input type="number" name="maxPrice" id="maxPrice" min="0"><br><br>
+                <input type="number" name="maxPrice" id="maxPrice" min="0" value="<?= $maxPrice ?>"><br><br>
 
                 <button type="submit">Apply Filter</button>
             </form>

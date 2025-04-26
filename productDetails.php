@@ -61,42 +61,41 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
 
 <body>
     <div class="product-detail-container">
-
-        <?php if (count($images) > 1): ?>
-            <div class="detail-slider">
-                <button class="slider-btn prev" onclick="moveDetailSlide(-1)">&#10094;</button>
-                <div class="detail-slides-wrapper">
-                    <div class="detail-slides" id="detailSlider">
-                        <?php foreach ($images as $img): ?>
-                            <img src="/images/<?= trim($img) ?>" class="detail-slide-image">
-                        <?php endforeach ?>
+        <div class="product-main">
+            <?php if (count($images) > 1): ?>
+                <div class="detail-slider">
+                    <button class="slider-btn prev" onclick="moveDetailSlide(-1)">&#10094;</button>
+                    <div class="detail-slides-wrapper">
+                        <div class="detail-slides" id="detailSlider">
+                            <?php foreach ($images as $img): ?>
+                                <img src="/images/<?= trim($img) ?>" class="detail-slide-image">
+                            <?php endforeach ?>
+                        </div>
                     </div>
+                    <button class="slider-btn next" onclick="moveDetailSlide(1)">&#10095;</button>
                 </div>
-                <button class="slider-btn next" onclick="moveDetailSlide(1)">&#10095;</button>
+            <?php else: ?>
+                <img src="/images/<?= trim($images[0]) ?>" class="detail-image">
+            <?php endif; ?>
+
+            <div class="product-info">
+                <h1 class="product-title"><?= htmlspecialchars($product->productName) ?></h1>
+                <p class="detail-price">RM<?= number_format($product->productPrice, 2) ?></p>
+                <p class="detail-description"><?= htmlspecialchars($product->productDescription) ?></p>
+                <form action="/cartItem/addCartItem.php" method="post">
+                    <label for="newQuantity">Quantity:</label>
+                    <input type="number" name="newQuantity" id="newQuantity" value="1" min="1"max="<?= $product->productQuantity ?>">
+                    <input type="hidden" name="productID" value="<?= $product->productID ?>">
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
+                    <?php endif; ?>
+                    <button class="buy-button">Add To Cart</button>
+                </form>
             </div>
-        <?php else: ?>
-            <img src="/images/<?= trim($images[0]) ?>" class="detail-image">
-        <?php endif; ?>
-
-        <div class="product-info">
-            <h1 class="product-title"><?= htmlspecialchars($product->productName) ?></h1>
-
-            <p class="detail-price">RM<?= number_format($product->productPrice, 2) ?></p>
-            <p class="detail-description"><?= htmlspecialchars($product->productDescription) ?></p>
-
-            <form action="/cartItem/addCartItem.php" method="post">
-                <input type="number" name="newQuantity" value="1" min="1" max="<?= $product->productQuantity ?>">
-                <input type="hidden" name="productID" value="<?= $product->productID ?>">
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
-                <?php endif; ?>
-                <button class="buy-button">Add To Cart</button>
-            </form>
         </div>
 
         <div class="product-reviews">
             <h2>Customer Reviews</h2>
-
             <?php if (count($reviews) > 0): ?>
                 <?php foreach ($reviews as $review): ?>
                     <div class="review-card">
@@ -118,7 +117,5 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
         </div>
     </div>
 </body>
-
 </html>
-
 <?php include 'footer.php'; ?>
