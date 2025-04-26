@@ -170,44 +170,56 @@ input[type="number"] {
 .product-reviews {
     width: 100%;
     max-width: 800px;
-    margin-top: 40px;
-    padding: 30px 0;
-    border-top: 1px solid #eee;
+    margin-top: 50px;
+    padding: 30px;
+    border-top: 2px solid #ccc;
+    background: #fafafa;
+    border-radius: 12px;
 }
 
 .review-card {
-    background: rgb(223, 255, 209);
-    padding: 25px;
-    margin-bottom: 25px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    transition: transform 0.3s ease;
+    background: #effeff;
+    padding: 20px 25px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .review-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
 }
 
 .review-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 15px;
     margin-bottom: 15px;
 }
 
+.review-header img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+}
+
 .review-user {
-    font-weight: 700;
+    font-weight: bold;
     font-size: 1.1em;
     color: #333;
 }
 
 .review-stars {
+    margin-left: auto;
     display: flex;
-    gap: 3px;
+    gap: 4px;
 }
 
 .star {
-    color: #ddd;
+    color: #ccc;
     font-size: 1.4em;
     transition: color 0.2s;
 }
@@ -216,24 +228,28 @@ input[type="number"] {
     color: #ffc107;
 }
 
-.review-date {
-    color: #888;
-    font-size: 0.9em;
-    margin-top: 15px;
+.review-content {
+    color: #555;
+    line-height: 1.6;
+    font-size: 15px;
+    margin-top: 10px;
 }
 
-.review-content {
-    color: #444;
-    line-height: 1.7;
-    font-size: 15px;
+.review-date {
+    color: #aaa;
+    font-size: 0.9em;
+    margin-top: 8px;
+    text-align: right;
 }
 
 .no-reviews {
     text-align: center;
-    color: #666;
-    padding: 30px;
+    color: #999;
     font-style: italic;
+    margin-top: 40px;
+    font-size: 1.1em;
 }
+
 
 @media (max-width: 768px) {
     .product-detail-container {

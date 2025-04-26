@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['orderID'])) {
     $success = $stmt->execute([$orderID, $userID]);
 
     if ($success) {
-        header("Location: /user/maintenanceOrder.php");
+        header("Location: /order/maintenanceOrder.php");
         exit();
     } else {
         echo "Failed to recover the order.";

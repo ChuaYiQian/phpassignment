@@ -25,7 +25,7 @@ if ($selectedPaymentID) {
     }
 }
 
-$orderID = $_POST['orderID'] ?? ''; 
+$orderID = $_GET['orderID'] ?? ''; 
 
 $sql = "
     SELECT 
@@ -169,7 +169,7 @@ $discount = $_SESSION['discount'] ?? 0;
 
             <form id="payment-form" method="POST" action="../order/payedOrder.php">
                 <input type="hidden" name="amount" value="<?= number_format($finalTotal, 2, '.', '') ?>">
-                <input type="hidden" name="orderID" value="<?= $_POST['orderID'] ?>">
+                <input type="hidden" name="orderID" value="<?= $_GET['orderID'] ?>">
                 <input type="hidden" name="voucherID" value="<?= $_SESSION['voucherID'] ?? null ?>">
 
                 <!-- Payment Method -->
