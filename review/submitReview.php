@@ -93,6 +93,6 @@ try {
     $_SESSION['error'] = $e->getMessage();
 }
 
-header("Location: ../order/orderDetail.php?orderID=" . urlencode($orderID));
+header("Location:/order/orderDetail.php?orderID=" . urlencode($orderID));
 exit;
 ?>

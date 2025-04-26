@@ -102,25 +102,25 @@ try {
     <div class="main-container">
     <div class="card-container">
             <div class="dashboard-card">
-                <div class="card-icon"></div>
+                <div class="card-icon"><img src="/images/customerIcon.png" width="50" height="50"></div>
                 <div class="card-title">CUSTOMERS</div>
                 <div class="card-value"><?= $cardData['customers'] ?></div>
             </div>
             
             <div class="dashboard-card">
-                <div class="card-icon"></div>
+                <div class="card-icon"><img src="/images/addToCart.png" width="50" height="50"></div>
                 <div class="card-title">PURCHASE ORDERS</div>
                 <div class="card-value"><?= $cardData['purchase_orders'] ?></div>
             </div>
             
             <div class="dashboard-card">
-                <div class="card-icon"></div>
+                <div class="card-icon"><img src="/images/salesOrderIcon.png" width="50" height="50"></div>
                 <div class="card-title">SALES ORDERS</div>
                 <div class="card-value"><?= $cardData['sales_orders'] ?></div>
             </div>
             
             <div class="dashboard-card">
-                <div class="card-icon"></div>
+                <div class="card-icon"><img src="/images/productIcon.jpg" width="50" height="50"></div>
                 <div class="card-title">PRODUCTS</div>
                 <div class="card-value"><?= $cardData['products'] ?></div>
             </div>

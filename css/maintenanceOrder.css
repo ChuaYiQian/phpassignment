@@ -68,7 +68,7 @@
 
 .status-pending { background-color: #ffeb3b; color: #000; }
 .status-payed { background-color: #2196f3; color: white; }
-.status-sendout { background-color: #2196f3; color: white; }
+.status-sendOut { background-color: #2196f3; color: white; }
 .status-completed { background-color: #4caf50; color: white; }
 .status-cancelled { background-color: #f44336; color: white; }
 
