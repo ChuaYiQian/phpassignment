@@ -1,5 +1,12 @@
+
 <?php include 'base.php'; ?>
 <?php include 'header.php';
+
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
+    header("Location: ../dashboard.php");
+    temp('error', 'Admins are not allowed to access this page.');
+    exit();
+}
 
 
 $categories = $_db->query('SELECT categoryID, categoryName FROM category WHERE categoryStatus = "Available"')->fetchAll();
@@ -33,11 +40,14 @@ if ($productName !== '') {
 
 $sql = 'SELECT p.* FROM product p 
         JOIN category c ON p.categoryID = c.categoryID 
-        WHERE p.productStatus = "Available" AND c.categoryStatus = "Available"';
+        WHERE p.productStatus = "Available" 
+        AND c.categoryStatus = "Available" 
+        AND p.productQuantity > 0';
 
 if ($where) {
     $sql .= ' AND ' . implode(' AND ', $where);
 }
+
 
 switch ($sort) {
     case 'price_asc':

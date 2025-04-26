@@ -82,7 +82,8 @@ try {
     $_db->commit();
 
     $_SESSION['success'] = 'review successful！';
-    header("Location: /order/userOrder.php");
+
+    header("Location: ../order/orderDetail.php?orderID=" . urlencode($orderID));
     exit;
 
 } catch (PDOException $e) {
@@ -93,6 +94,6 @@ try {
     $_SESSION['error'] = $e->getMessage();
 }
 
-header("Location:/order/orderDetail.php?orderID=" . urlencode($orderID));
+header("Location:../order/orderDetail.php?orderID=" . urlencode($orderID));
 exit;
 ?>

@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_name'] = $admin['userName'];
             $_SESSION['user_role'] = $admin['userRole'];
             $_SESSION['user_status'] = $admin['userStatus'];
-            $_SESSION['user_profile_pic'] = $admin['userProfilePicture']; 
+            $_SESSION['user_profile_pic'] = $admin['userProfilePicture'];
             header("Location: admin_dashboard.php");
             exit();
         } else {
@@ -31,14 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($result->num_rows == 1) {
         $user = $result->fetch_assoc();
-        
+
         // Check if account is active
         if ($user['userStatus'] != 'active') {
             $_SESSION['login_error'] = "Your account has been blocked. Please contact an administrator.";
             header("Location: home.php");
             exit();
         }
-        
+
         // Verify password
         if (password_verify($password, $user['userPassword'])) {
             // Set session variables
@@ -47,13 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_role'] = $user['userRole'];
             $_SESSION['user_status'] = $user['userStatus'];
             $_SESSION['user_profile_pic'] = $user['userProfilePicture'];
-            
+
             // Set success message
             $_SESSION['login_success'] = true;
-            
+
             // Redirect based on role
             if ($user['userRole'] == 'admin') {
-                header("Location: admin_dashboard.php");
+                header("Location: dashboard.php");
             } elseif ($user['userRole'] == 'staff') {
                 header("Location: home.php");
             } else {
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         header("Location: home.php");
         exit();
     }
-    
+
     $stmt->close();
 } else {
     header("Location: home.php");

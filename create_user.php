@@ -1,16 +1,9 @@
 <?php
 session_start();
 require_once 'base.php';
-
-// Check permissions
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
     header("Location: home.php");
-    exit();
-}
-
-// Only admin can create staff
-if ($_SESSION['user_role'] != 'admin' && ($_GET['role'] ?? '') == 'staff') {
-    header("Location: home.php");
+    temp('error', 'You do not have permission to access this page.');
     exit();
 }
 
@@ -103,7 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </style>
 </head>
 <body>
-    <?php include 'header.php'; ?>
     
     <div class="container">
         <h1>Create New <?= ucfirst($role) ?></h1>

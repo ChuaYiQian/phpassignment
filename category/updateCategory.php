@@ -7,10 +7,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
     header("Location: ../home.php");
     temp('error', 'You do not have permission to access this page.');
     exit();
-} else if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: ../home.php");
-    temp('error', 'Invalid access method.');
-    exit;
 }
 
 // ----------------------------------------------------------------------------
@@ -32,13 +28,12 @@ if (!is_post()) {
 
 if (is_post()) {
     $categoryName = req("categoryName");
-    $categoryStatus  = req('categoryStatus');
+    $categoryStatus = req('categoryStatus');
 
     // Validate: name
     if ($categoryName == '') {
         $_err['categoryName'] = 'Required';
-    }
-    else if (strlen($categoryName) > 15) {
+    } else if (strlen($categoryName) > 15) {
         $_err['categoryName'] = 'Maximum 15 characters';
     }
 
@@ -54,12 +49,12 @@ if (is_post()) {
             $stm = $_db->prepare('
                 UPDATE category SET categoryName=?, categoryStatus=? WHERE categoryID=?
             ');
-    
+
             $stm->execute([$categoryName, $categoryStatus, $categoryID]);
-    
+
             temp('info', 'Record updated successfully');
             header('Location: /category/categoryMaintenance.php');
-    
+
         } catch (PDOException $e) {
             die("Error inserting data: " . $e->getMessage());
         }
@@ -71,28 +66,37 @@ if (is_post()) {
 $_title = 'Category | Update';
 ?>
 <link rel="stylesheet" href="/css/insertproduct.css">
-
-<form method="post" class="form" enctype="multipart/form-data" novalidate>
-    <h1 class="title">Update Category</h1>
-    <div class="form-group">
-    <label for="id">Category ID: <?php echo $categoryID ?></label>
-    <?= html_hidden('categoryID'); ?>
+<div class="container">
+    <div class="topbar-Goback">
+        <a href="/category/categoryMaintenance.php">
+            <img src="/images/goBackIcon.png" alt="" width="40px" height="40px">
+        </a>
+        <div class="topbar-text">
+            <h1>Go Back</h1>
+        </div>
     </div>
+    <form method="post" class="form" enctype="multipart/form-data" novalidate>
+        <h1 class="title">Update Category</h1>
+        <div class="form-group">
+            <label for="id">Category ID: <?php echo $categoryID ?></label>
+            <?= html_hidden('categoryID'); ?>
+        </div>
 
-    <div class="form-group">
-    <label for="name">Name</label>
-    <?= html_text('categoryName', 'maxlength="15"') ?>
-    <?= err('categoryName') ?>
-    </div>
+        <div class="form-group">
+            <label for="name">Name</label>
+            <?= html_text('categoryName', 'maxlength="15"') ?>
+            <?= err('categoryName') ?>
+        </div>
 
-    <div class="form-group">
-    <label for="status">Status</label>
-    <?= html_select('categoryStatus', ['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
-        <?= err('categoryStatus') ?>
-    </div>
+        <div class="form-group">
+            <label for="status">Status</label>
+            <?= html_select('categoryStatus', ['available' => 'Available', 'unavailable' => 'Unavailable']) ?>
+            <?= err('categoryStatus') ?>
+        </div>
 
-    <section>
-        <button>Submit</button>
-        <button type="reset">Reset</button>
-    </section>
-</form>
+        <section>
+            <button>Submit</button>
+            <button type="reset">Reset</button>
+        </section>
+    </form>
+</div>

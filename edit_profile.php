@@ -1,9 +1,9 @@
 <?php
 session_start();
 require_once 'base.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: home.php");
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
+    header("Location: ../dashboard.php");
+    temp('error', 'Admins are not allowed to access this page.');
     exit();
 }
 
