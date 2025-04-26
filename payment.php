@@ -25,7 +25,7 @@ if ($selectedPaymentID) {
     }
 }
 
-$orderID = $_GET['orderID'] ?? ''; 
+$orderID = $_POST['orderID'] ?? ''; 
 
 $sql = "
     SELECT 
@@ -119,7 +119,7 @@ $discount = $_SESSION['discount'] ?? 0;
                         $total += $subtotal;
                     ?>
                     <tr>
-                        <td><img src="/images/<?= $p['productPicture'] ?>" width="100"></td>
+                        <td><img src="/images/<?= $firstImage = explode(',', $p['productPicture'])[0]; ?>" width="100"></td>
                         <td><?= $p['productDescription'] ?></td>
                         <td>RM<?= number_format($p['productPrice'], 2) ?></td>
                         <td><?= $qty ?></td>
@@ -167,9 +167,9 @@ $discount = $_SESSION['discount'] ?? 0;
                 <h3 id="total-price">Total: <span class="price">RM<?= number_format($finalTotal, 2) ?></span></h3>
             </div>
 
-            <form id="payment-form" method="POST" action="../order/completeOrder.php">
+            <form id="payment-form" method="POST" action="../order/payedOrder.php">
                 <input type="hidden" name="amount" value="<?= number_format($finalTotal, 2, '.', '') ?>">
-                <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
+                <input type="hidden" name="orderID" value="<?= htmlspecialchars($_POST['orderID']) ?>">
                 <input type="hidden" name="voucherID" value="<?= $_SESSION['voucherID'] ?? null ?>">
 
                 <!-- Payment Method -->

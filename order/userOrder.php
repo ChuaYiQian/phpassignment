@@ -157,7 +157,7 @@ function getTopProductImage($orderID, $db)
                 </div>
                 <div class="order-actions">
                     <?php if ($order['orderStatus'] === 'pending'): ?>
-                        <form method="post" action="/order/orderDetail.php" style="display:inline;">
+                        <form method="post" action="../payment.php" style="display:inline;">
                             <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
                             <button type="submit">Pay Now</button>
                         </form>
