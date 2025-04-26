@@ -101,6 +101,7 @@
 
 .summary .discount-price {
     color: red;
+    text-align: right;
 }
 
 .payment-methods {
