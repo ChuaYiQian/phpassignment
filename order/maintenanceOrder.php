@@ -27,7 +27,7 @@ if ($status != 'all') {
     $params['status'] = $status;
 }
 
-switch($sort) {
+switch ($sort) {
     case 'id_asc':
         $orderBy = 'o.orderID ASC';
         break;
@@ -62,6 +62,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,18 +70,19 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="admin_dashboard.php">
     <link rel="stylesheet" href="/css/maintenanceOrder.css">
 </head>
+
 <body>
     <?php include '../adminheader.php'; ?>
-    
+
     <div class="container">
         <h1>Order Maintenance</h1>
 
         <div class="filter-section">
             <form method="get" action="maintenanceOrder.php" class="filter-form">
                 <div class="search-group">
-                    <input type="text" name="search" class="search-box" 
-                           placeholder="Search by Order ID or Username..."
-                           value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                    <input type="text" name="search" class="search-box"
+                        placeholder="Search by Order ID or Username..."
+                        value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
                     <button type="submit" class="search-btn">Search</button>
                 </div>
 
@@ -138,8 +140,10 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <a href="maintenanceOrderItem.php?id=<?= $order['orderID'] ?>"
                                 class="btn btn-view">View Detail</a>
                             <?php if ($order['orderStatus'] == 'payed'): ?>
-                                <a href="sendOutOrder.php?id=<?= $order['orderID'] ?>"
-                                    class="btn btn-send">Send Out</a>
+                                <form method="post" action="sendOutOrder.php" style="display:inline;">
+                                    <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
+                                    <button type="submit" class="btn btn-view">Sent Out</button>
+                                </form>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -154,8 +158,8 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
 
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a class="page-item <?= $i == $page ? 'active' : '' ?>" 
-                   href="<?= getPaginationLink($i) ?>">
+                <a class="page-item <?= $i == $page ? 'active' : '' ?>"
+                    href="<?= getPaginationLink($i) ?>">
                     <?= $i ?>
                 </a>
             <?php endfor; ?>
@@ -168,10 +172,12 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
 </body>
+
 </html>
 
 <?php
-function getPaginationLink($page) {
+function getPaginationLink($page)
+{
     $params = $_GET;
     $params['page'] = $page;
     return 'maintenanceOrder.php?' . http_build_query($params);

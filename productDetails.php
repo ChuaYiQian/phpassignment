@@ -32,6 +32,7 @@ $images = explode(',', $product->productPicture);
 $reviewStmt = $_db->prepare("
     SELECT 
         u.userName,
+        u.userProfilePicture,
         r.starQuantity,
         r.reviewDescription,
         r.reviewDate
@@ -99,6 +100,7 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
             <?php if (count($reviews) > 0): ?>
                 <?php foreach ($reviews as $review): ?>
                     <div class="review-card">
+                    <img src="/images/<?= htmlspecialchars($review['userProfilePicture']) ?>" width="50" height="50" style="border-radius: 50%;">
                         <div class="review-header">
                             <span class="review-user">User:<?= htmlspecialchars($review->userName) ?></span>
                             <div class="review-stars">

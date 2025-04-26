@@ -176,14 +176,11 @@ function getTopProductImage($orderID, $db)
                             <button type="submit">Recover</button>
                         </form>
                     <?php elseif ($order['orderStatus'] === 'payed'): ?>
-                        <form method="post" action="recoverOrder.php" style="display:inline;">
-                            <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
-                            <button type="submit">Recover</button>
-                        </form>
+                        <p>Waiting Packing and Shipping</p>
                     <?php elseif ($order['orderStatus'] === 'sendOut'): ?>
-                        <form method="post" action="recoverOrder.php" style="display:inline;">
+                        <form method="post" action="completeOrder.php" style="display:inline;">
                             <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
-                            <button type="submit">Recover</button>
+                            <button type="submit">Order Receive</button>
                         </form>
                     <?php endif; ?>
 
