@@ -182,9 +182,6 @@ if (!isset($_SESSION['user_profile_pic'])) {
             <a href="/admin_dashboard.php">Users</a>
         </div>
         <div class="side-btn">
-            <a href="/cart/maintenanceCart.php">Cart</a>
-        </div>
-        <div class="side-btn">
             <a href="/voucher_table.php">Voucher</a>
         </div>
         <div class="side-btn">

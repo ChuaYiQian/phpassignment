@@ -1,5 +1,7 @@
-<?php include 'header.php'; ?>
-<?php include 'base.php';
+<?php include 'base.php'; ?>
+<?php include 'header.php';
+
+
 $categories = $_db->query('SELECT categoryID, categoryName FROM category WHERE categoryStatus = "Available"')->fetchAll();
 
 $category = req('category');

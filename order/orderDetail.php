@@ -16,11 +16,11 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-if (!isset($_GET['orderID'])) {
+if (!isset($_POST['orderID'])) {
     die("Invalid order access");
 }
 
-$orderID = $_GET['orderID'];
+$orderID = $_POST['orderID'];
 $userID = $_SESSION['user_id'];
 
 try {
@@ -122,6 +122,7 @@ try {
                             <form class="review-form" id="review-form-<?= $item['productID'] ?>" 
                                   style="display:none;" method="post" action="../review/submitReview.php">
                                 <input type="hidden" name="orderID" value="<?= $orderID ?>">
+                                <input type="hidden" name="user_id" value="<?= $_SESSION['user_id'] ?>">
                                 <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
                                 <div class="rating">
                                     <span class="star" data-value="1">★</span>

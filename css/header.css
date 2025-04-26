@@ -122,3 +122,23 @@ nav ul li a, .login-btn {
     border: 1px solid #ffcccc;
     border-radius: 4px;
 }
+
+.cart-icon-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.cart-count {
+    position: absolute;
+    top: 0px;
+    right: -8px;
+    background: red;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 2px;
+    border-radius: 100%;
+    min-width: 18px;
+    text-align: center;
+    z-index: 9999;
+}

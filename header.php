@@ -3,22 +3,44 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Ensure profile picture is set in session
-if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
-    require_once 'base.php';
-    $stmt = $conn->prepare("SELECT userProfilePicture FROM user WHERE userID = ?");
-    $stmt->bind_param("s", $_SESSION['user_id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result->num_rows == 1) {
-        $user = $result->fetch_assoc();
-        $_SESSION['user_profile_pic'] = $user['userProfilePicture'];
+
+if (isset($_SESSION['user_id'])) {
+
+    if (!isset($_SESSION['user_profile_pic'])) {
+        $stmt = $conn->prepare("SELECT userProfilePicture FROM user WHERE userID = ?");
+        $stmt->bind_param("s", $_SESSION['user_id']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows == 1) {
+            $user = $result->fetch_assoc();
+            $_SESSION['user_profile_pic'] = $user['userProfilePicture'];
+        }
+        $stmt->close();
     }
-    $stmt->close();
+
+    $cstmt = $_db->prepare("SELECT cartID FROM cart WHERE userID = ?");
+    $cstmt->execute([$_SESSION['user_id']]);
+    $cartRow = $cstmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($cartRow) {
+        $cartID = $cartRow['cartID'];
+
+        $cstmt = $_db->prepare("SELECT SUM(cartQuantity) AS total FROM cartItem WHERE cartID = ?");
+        $cstmt->execute([$cartID]);
+        $result = $cstmt->fetch(PDO::FETCH_ASSOC);
+
+        $_SESSION['cart_id'] = $cartID;
+        $_SESSION['cart_count'] = $result['total'] ?? 0;
+    } else {
+        $_SESSION['cart_count'] = 0;
+    }
 }
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,47 +50,47 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
             position: relative;
             display: inline-block;
         }
-        
+
         .profile-btn {
             background: none;
             border: none;
             cursor: pointer;
             padding: 0;
         }
-        
+
         .profile-img {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             object-fit: cover;
         }
-        
+
         .dropdown-content {
             display: none;
             position: absolute;
             right: 0;
             background-color: #f9f9f9;
             min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
             z-index: 1;
             border-radius: 4px;
         }
-        
+
         .dropdown-content a {
             color: black;
             padding: 12px 16px;
             text-decoration: none;
             display: block;
             text-align: left !important;
-            font-size:14px !important;
+            font-size: 14px !important;
             font-weight: normal !important;
         }
-        
+
         .dropdown-content a:hover {
             background-color: #f1f1f1;
             border-radius: 4px;
         }
-        
+
         .profile-dropdown:hover .dropdown-content {
             display: block;
         }
@@ -88,7 +110,10 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
             background-color: #f1f1f1;
         }
 
-        a:hover{transform: translateY(-5px); transition-duration:0.2s;}
+        a:hover {
+            transform: translateY(-5px);
+            transition-duration: 0.2s;
+        }
     </style>
 </head>
 <header>
@@ -99,18 +124,16 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
             <li><a href="/product.php">Products</a></li>
             <?php if (isset($_SESSION['user_id'])): ?>
                 <li>
-                    <a href="/cart/cart.php">
+                    <a href="/cart/cart.php" class="cart-icon-wrapper">
                         <img src="/images/addToCart.png" style="width: 30px; height: 30px;">
+                        <?php if (isset($_SESSION['cart_count']) && $_SESSION['cart_count'] > 0): ?>
+                            <span class="cart-count"><?php echo $_SESSION['cart_count']; ?></span>
+                        <?php endif; ?>
                     </a>
                 </li>
                 <li>
                     <a href="/order/userOrder.php">
                         <img src="/images/orderIcon.jpg" style="width: 30px; height: 30px;">
-                    </a>
-                </li>
-                <li>
-                    <a href="/order/userOrder.php">
-                        <img src="/images/notificationIcon.png" style="width: 30px; height: 30px;">
                     </a>
                 </li>
                 <li class="profile-dropdown">
@@ -120,7 +143,7 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
                     <div class="dropdown-content">
                         <a href="/view_profile.php">View Profile</a>
                         <form action="/logout.php" method="POST" style="display:inline;">
-                            <button type="submit"  class="logout-btn">Logout</button>
+                            <button type="submit" class="logout-btn">Logout</button>
                         </form>
                     </div>
                 </li>
@@ -137,7 +160,7 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
         <form action="login_process.php" method="POST">
             <!-- Error message container -->
             <div id="loginError" class="error-message" style="display: none;"></div>
-            
+
             <label for="username">Username/Email:</label>
             <input type="text" id="username" name="username" value="admin" required>
 
@@ -229,6 +252,4 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
             <?php unset($_SESSION['logout_success']); ?>
         <?php endif; ?>
     };
-
-    
 </script>

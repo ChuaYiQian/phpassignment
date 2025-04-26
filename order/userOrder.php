@@ -166,8 +166,9 @@ function getTopProductImage($orderID, $db)
                             <button type="submit">Cancel Order</button>
                         </form>
                     <?php elseif ($order['orderStatus'] === 'completed'): ?>
-                        <form method="get" action="/order/orderDetail.php" style="display:inline;">
+                        <form method="post" action="/order/orderDetail.php" style="display:inline;">
                             <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
+                            <input type="hidden" name="user_id" value="<?= $_SESSION['user_id'] ?>">
                             <button type="submit">View Receipt</button>
                         </form>
                     <?php elseif ($order['orderStatus'] === 'cancelled'): ?>

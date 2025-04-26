@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: ../home.php");
     temp('error', 'Access denied. Please log in to continue.');
     exit;
-}else if(!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin'){
+} else if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
     header("Location: ../dashboard.php");
     temp('error', 'Admins are not allowed to access this page.');
     exit();
@@ -130,30 +130,29 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </button>
                             </form>
 
-                            <div id="confirmation" class="modal-container">
-                                <div class="modal">
-                                    <section>
-                                        <span onclick="hideDeleteConfirmation()">&times;</span>
-                                        <header class="modal-header">
-                                            <h2>Are you sure you want to delete this?</h2>
-                                        </header>
-                                        <section class="modal-content">
-                                            <p>This action cannot be undone</p>
-                                        </section>
-                                        <footer class="modal-footer">
-                                            <button class="modal-button" onclick="hideDeleteConfirmation()">Cancel</button>
-                                            <button class="modal-button modal-confirm-button" onclick="confirmDelete()">Confirm</button>
-                                        </footer>
-                                    </section>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
     </div>
-
+    <div id="confirmation" class="modal-container">
+        <div class="modal">
+            <section>
+                <header class="modal-header">
+                    <h2>Are you sure you want to delete this?</h2>
+                </header>
+                <section class="modal-content">
+                    <p>This action cannot be undone</p>
+                </section>
+                <footer class="modal-footer">
+                    <button class="modal-button" onclick="hideDeleteConfirmation()">Cancel</button>
+                    <button class="modal-button modal-confirm-button" onclick="confirmDelete()">Confirm</button>
+                </footer>
+            </section>
+        </div>
+    </div>
     <div class="sidebar">
         <div class="sidebar-content" style="text-align: center;">
             <h2 class="sidebar-title" style="margin-bottom: 10px;">Order Summary</h2>
