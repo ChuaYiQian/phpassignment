@@ -1,12 +1,5 @@
 <?php include 'header.php'; ?>
 <?php include 'base.php';
-
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
-    header("Location: ../dashboard.php");
-    temp('error', 'Admins are not allowed to access this page.');
-    exit();
-}
-
 $categories = $_db->query('SELECT categoryID, categoryName FROM category WHERE categoryStatus = "Available"')->fetchAll();
 
 $category = req('category');
