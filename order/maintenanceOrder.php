@@ -138,8 +138,8 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </span>
                         </td>
                         <td class="action-btns" style="border-left: 1px solid #ddd;">
-                            <a href="/orderInformation/maintenanceOrderItem.php?id=<?= $order['orderID'] ?>"
-                                class="btn btn-view">View Detail</a>
+                        <a href="../orderInformation/maintenanceOrderInfo.php?orderID=<?= $order['orderID'] ?>" 
+                        class="btn btn-view">View Detail</a>
                             <?php if ($order['orderStatus'] == 'payed'): ?>
                                 <form method="post" action="sendOutOrder.php" style="display:inline;">
                                     <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
