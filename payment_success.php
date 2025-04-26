@@ -23,11 +23,12 @@ if ($paymentID) {
     echo "No payment ID found.";
 }
 
-$stmt = $_db->prepare("SELECT userEmail FROM user WHERE userID = ?");
+$stmt = $_db->prepare("SELECT userEmail, userAddress FROM user WHERE userID = ?");
 $stmt->execute([$userID]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $recipientEmail = $user ? $user['userEmail'] : null; 
+$userAddress = $user ? $user['userAddress'] : null;
 
 // Generate the Transaction ID
 function generateTransactionID($db) {
@@ -63,6 +64,7 @@ $insertSuccess = $insertStmt->execute([
 
 if (!$insertSuccess) {
     $_SESSION['error'] = "Failed to record the transaction.";
+    $_SESSION['orderID'] = $orderID;
     header("Location: /payment_failed.php");
     exit;
 }
@@ -74,6 +76,12 @@ $body = "
     <p>Your payment for Order <strong>#$orderID</strong> has been received successfully.</p>
     <p>You can now continue shopping or view your order history.</p>
 ";
+
+if ($userAddress) {
+    $body .= "<p>Shipping Address: <strong>" . htmlspecialchars($userAddress) . "</strong></p>";
+} else {
+    $body .= "<p>No shipping address available.</p>";
+}
 
 try {
     $mail = get_mail(); 
@@ -102,7 +110,8 @@ try {
 </head>
 <body>
     <h1>Payment Successful!</h1>
-    <p>A confirmation email has been sent to <strong><?php echo htmlspecialchars($recipientEmail); ?></strong>.</p>
+    <p>A confirmation email has been sent to 
+        <strong><?php echo htmlspecialchars($recipientEmail  ?? 'your email'); ?></strong>.</p>
     <p>You will be redirected to the homepage shortly...</p>
 </body>
 </html>

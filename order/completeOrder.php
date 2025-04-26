@@ -15,12 +15,6 @@ $userID = $_SESSION['user_id'];
 $paymentID = $_POST['payment_method'];
 $amount = $_POST['amount'] ?? 0; 
 
-if (isset($_POST['simulate']) && $_POST['simulate'] === 'fail') {
-    $_SESSION['error'] = "Simulated payment failure.";
-    header("Location: /payment_error.php?orderID=" . urlencode($orderID));
-    exit;
-}
-
 try {
     $_db->beginTransaction();
 
@@ -85,11 +79,13 @@ try {
     $_db->rollBack();
     error_log("PDO error: " . $e->getMessage()); // Log it
     $_SESSION['error'] = "Database error occurred. Please try again.";
+    $_SESSION['order_id'] = $orderID; 
     header("Location: /payment_error.php?orderID=" . urlencode($orderID));
     exit;
 } catch (Exception $e) {
     $_db->rollBack();
     $_SESSION['error'] = $e->getMessage();
+    $_SESSION['order_id'] = $orderID; 
     header("Location: /payment_error.php?orderID=" . urlencode($orderID));
     exit;
 }

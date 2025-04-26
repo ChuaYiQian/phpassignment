@@ -3,7 +3,6 @@ include 'base.php';
 require_once 'lib/phpqrcode/qrlib.php';
 session_start();
 
-
 $cart = $_SESSION['cart'] ?? [];
 $total = 0;
 $discount = 0;
@@ -11,19 +10,18 @@ $voucherMsg = '';
 $voucherID = null;
 $shippingFee = 5.00;
 
-// To get the tax rate from database
+// Get the tax rate from the database
 $selectedPaymentID = $_POST['payment_method'] ?? null;
-$selectedMethod = null;
-$taxRate = 0.06;
+$taxRate = 0.00;
 
 if ($selectedPaymentID) {
     $stmt = $conn->prepare("SELECT * FROM paymentmethod WHERE paymentID = ?");
     $stmt->bind_param("s", $selectedPaymentID);
     $stmt->execute();
     $result = $stmt->get_result();
+    
     if ($result && $row = $result->fetch_assoc()) {
-        $selectedMethod = $row;
-        $taxRate = floatval($row['taxRate']);  
+        $taxRate = floatval($row['taxRate']) / 100;  
     }
 }
 
@@ -46,8 +44,6 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $orderID);
 $stmt->execute();
 $result = $stmt->get_result();
-
-
 
 if ($result) {
     $products = $result->fetch_all(MYSQLI_ASSOC);
@@ -164,18 +160,17 @@ $discount = $_SESSION['discount'] ?? 0;
             ?>
             <div class="summary">
                 <p>Subtotal: <span class="price">RM<?= number_format($total, 2) ?></span></p>
-                <p>Tax (<?= $taxRate * 100 ?>%): <span class="price">RM<?= number_format($taxAmount, 2) ?></span></p>
+                <p id="tax-rate">Tax (<?= $taxRate * 100 ?>%): <span class="price">RM<?= number_format($taxAmount, 2) ?></span></p>
                 <p>Shipping: <span class="price">RM<?= number_format($shippingFee, 2) ?></span></p>
                 <p>Discount: <span class="price discount-price">-RM<?= number_format($discountAmount, 2) ?></span></p>
-                <h3>Total: <span class="price">RM<?= number_format($finalTotal, 2) ?></span></h3>
+                <h3 id="total-price">Total: <span class="price">RM<?= number_format($finalTotal, 2) ?></span></h3>
             </div>
-            <input type="hidden" id="total-amount" value="<?= $total ?>">
-            <input type="hidden" id="tax-rate" value="<?= $taxRate ?>">
 
             <form id="payment-form" method="POST" action="../order/completeOrder.php">
                 <input type="hidden" name="amount" value="<?= $finalTotal ?>">
                 <input type="hidden" name="orderID" value="<?= htmlspecialchars($_GET['orderID']) ?>">
-                
+                <input type="hidden" name="voucherID" value="<?= $_SESSION['voucherID'] ?? null ?>">
+
                 <!-- Payment Method -->
                 <div class="payment-methods">
                     <?php foreach ($payment_methods as $index => $method): ?>
@@ -186,8 +181,9 @@ $discount = $_SESSION['discount'] ?? 0;
                                 id="<?= $radioID ?>"
                                 name="payment_method"
                                 value="<?= htmlspecialchars($method['paymentID']) ?>"
-                                data-category="<?= htmlspecialchars($method['category']) ?>"required>
-                                <label class="method-option" for="<?= $radioID ?>">
+                                data-category="<?= htmlspecialchars($method['category']) ?>"
+                                required>
+                            <label class="method-option" for="<?= $radioID ?>">
                                 <img src="/<?= $method['paymentIcon'] ?>" alt="<?= $method['paymentDescription'] ?>">
                                 <?= $method['paymentDescription'] ?>
                             </label>
@@ -195,37 +191,28 @@ $discount = $_SESSION['discount'] ?? 0;
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Card Details -->
-                <div id="card-fields"  class="card-fields" style="display: none;">
+                <!-- Dynamic Fields for Selected Payment Method -->
+                <div id="card-fields" class="card-fields" style="display: none;">
                     <label>Card Number:
-                        <input type="text" id="cardNumber" name="cardNumber" maxlength="16"
-                            value="<?= $_SESSION['card_number'] ?? '' ?>">
+                        <input type="text" id="cardNumber" name="cardNumber" maxlength="16" value="<?= $_SESSION['card_number'] ?? '' ?>">
                     </label><br>
                     <label>Expiry Date (MM/YY):
-                        <input type="text" id="expiry" name="expiry"
-                            value="<?= $_SESSION['expiry'] ?? '' ?>">
+                        <input type="text" id="expiry" name="expiry" value="<?= $_SESSION['expiry'] ?? '' ?>">
                     </label><br>
                     <label>CVV:
-                        <input type="text" id="cvv" name="cvv" maxlength="3"
-                            value="<?= $_SESSION['cvv'] ?? '' ?>">
+                        <input type="text" id="cvv" name="cvv" maxlength="3" value="<?= $_SESSION['cvv'] ?? '' ?>">
                     </label>
                 </div>
 
-                <!-- Tng -->
+                <!-- TNG (QR Code) -->
                 <div id="e-wallet" class="paidtng" style="display: none;">
                     <label>Please Scan the QR to Pay</label><br>
-                    <?php
-                        ob_start();
-                        $qrContent = "Pay RM" . number_format($finalTotal, 2) . " for Order #" . $orderID;
-                        QRcode::png($qrContent, null, QR_ECLEVEL_L, 4);
-                        $qrImage = base64_encode(ob_get_clean());
-                    ?>
-                    <img src="data:image/png;base64,<?= $qrImage ?>" alt="QR Code">
-                    <p>Amount: RM<?= number_format($finalTotal, 2) ?></p>
+                    <img id="qrCode" src="" alt="QR Code" style="display: none;">
+                    <p id="qrAmount"></p>
                 </div>
 
-                <!-- Bank Options -->
-                <div id="bank-list" class="bank-list">
+                <!-- Bank Options (for Online Banking) -->
+                <div id="bank-list" class="bank-list" style="display: none;">
                     <label>Select Bank:</label>
                     <?php foreach ($payment_methods as $method): ?>
                         <?php if ($method['category'] == 'Bank'): ?>
@@ -241,83 +228,77 @@ $discount = $_SESSION['discount'] ?? 0;
                 <div class="place-order">
                     <button type="submit">Place Order</button>
                 </div>
+
+                <!-- simulate payment failure -->
+                <div class="simulate-fail">
+                    <button type="submit" name="simulate" value="fail" style="background-color: red; color: white;">Simulate Payment Failure</button>
+                </div>
             </form>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+       document.addEventListener("DOMContentLoaded", function () {
             const methodRadios = document.querySelectorAll('input[name="payment_method"]');
+            const taxRateElement = document.getElementById('tax-rate');
+            const totalElement = document.getElementById('total-price');
+            const discount = <?= json_encode($discount) ?>;
+            const shippingFee = <?= json_encode($shippingFee) ?>;
+            const total = <?= json_encode($total) ?>;
+
             const cardFields = document.getElementById('card-fields');
-            const paidtng = document.getElementById('e-wallet');
+            const eWallet = document.getElementById('e-wallet');
             const bankList = document.getElementById('bank-list');
 
-            // Hide all by default
-            cardFields.style.display = "none";
-            paidtng.style.display = "none";
-            bankList.style.display = "none";
+            function updateTotal(taxRate) {
+                const taxAmount = total * taxRate;
+                const discountAmount = total * (discount / 100);
+                const finalTotal = total - discountAmount + taxAmount + shippingFee;
+                
+                taxRateElement.innerHTML = `Tax (${(taxRate * 100).toFixed(2)}%): <span class="price">RM${taxAmount.toFixed(2)}</span>`;
+                totalElement.innerHTML = `Total: <span class="price">RM${finalTotal.toFixed(2)}</span>`;
+            }
 
             methodRadios.forEach(radio => {
                 radio.addEventListener("change", function () {
-                    const category = this.getAttribute('data-category');
-                    console.log("Selected category:", category); // Add debug here
-                    toggleFields(category);
+                    const selectedPaymentID = this.value;
+                    const selectedCategory = this.getAttribute('data-category');
+
+                    fetch(`getTaxRate.php?paymentID=${selectedPaymentID}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const taxRate = data.taxRate / 100;
+                            updateTotal(taxRate);
+                        });
+
+                    // Handle dynamic fields display
+                    if (selectedCategory === "Credit/Debit Card") {
+                        cardFields.style.display = "block";
+                        eWallet.style.display = "none";
+                        bankList.style.display = "none";
+                    } else if (selectedCategory === "E-wallet") {
+                        cardFields.style.display = "none";
+                        eWallet.style.display = "block";
+                        bankList.style.display = "none";
+                        // Fetch the new QR Code
+                        fetch(`generateQRCode.php?orderID=<?= $orderID ?>&paymentID=${selectedPaymentID}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const qrImage = document.getElementById('qrCode');
+                                const qrAmount = document.getElementById('qrAmount');
+                                qrImage.src = `data:image/png;base64,${data.qr}`;
+                                qrImage.style.display = 'block';
+                                qrAmount.innerText = `Amount: RM${parseFloat(data.amount).toFixed(2)}`;
+                            });
+                    } else if (selectedCategory === "Online Banking") {
+                        cardFields.style.display = "none";
+                        eWallet.style.display = "none";
+                        bankList.style.display = "block";
+                    } else {
+                        cardFields.style.display = "none";
+                        eWallet.style.display = "none";
+                        bankList.style.display = "none";
+                    }
                 });
-            });
-
-            function toggleFields(category) {
-            const cardFields = document.getElementById('card-fields');
-            const paidtng = document.getElementById('e-wallet');
-            const bankList = document.getElementById('bank-list');
-
-            // Hide all by default
-            cardFields.style.display = 'none';
-            paidtng.style.display = 'none';
-            bankList.style.display = 'none';
-
-            // Based on the category to show the details
-            if (category.toLowerCase() === 'credit/debit card') {
-                cardFields.style.display = 'block';
-            } else if (category.toLowerCase() === 'e-wallet') {
-                paidtng.style.display = 'block';
-            } else if (category.toLowerCase() === 'online banking') {
-                bankList.style.display = 'block';
-            }
-        }
-
-            // Form validation
-            const form = document.getElementById("payment-form");
-            form.addEventListener("submit", function (e) {
-                const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
-                if (!selectedPayment) {
-                    alert("Please select a payment method.");
-                    e.preventDefault();
-                    return;
-                }
-
-                const category = selectedPayment.getAttribute('data-category');
-                if (category.toLowerCase() === 'credit/debit card') {
-                    const cardNumber = document.getElementById('cardNumber').value.trim();
-                    const expiry = document.getElementById('expiry').value.trim();
-                    const cvv = document.getElementById('cvv').value.trim();
-
-                    if (!/^\d{16}$/.test(cardNumber)) {
-                        alert("Invalid card number. Must be 16 digits.");
-                        e.preventDefault();
-                        return;
-                    }
-
-                    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
-                        alert("Invalid expiry date. Format should be MM/YY.");
-                        e.preventDefault();
-                        return;
-                    }
-
-                    if (!/^\d{3}$/.test(cvv)) {
-                        alert("Invalid CVV. Must be 3 digits.");
-                        e.preventDefault();
-                        return;
-                    }
-                }
             });
         });
     </script>

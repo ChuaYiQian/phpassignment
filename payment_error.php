@@ -1,6 +1,6 @@
 <?php
 session_start();
-$orderID = $_SESSION['order_id'] ?? 'Unknown';
+$orderID = $_SESSION['order_id'] ?? ($_GET['orderID'] ?? 'Unknown');
 ?>
 
 <!DOCTYPE html>
