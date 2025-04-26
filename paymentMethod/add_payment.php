@@ -95,17 +95,27 @@ if (is_post()) {
             <?= err('category') ?>
 
             <label>Upload Icon</label>
-            <div class="upload-wrapper">
-                <label class="upload">
-                    <input type="file" name="icon" hidden onchange="previewImage(this)">
-                    <img src="/images/photo.jpg" onclick="this.previousElementSibling.click();" id="preview">
-                </label>
+            <div class="upload-wrapper" onclick="document.getElementById('iconInput').click();">
+                <img id="preview" src="" style="cursor:pointer; width:150px; height:150px; object-fit:cover; background:#f0f0f0;">
             </div>
+            <input type="file" name="icon" id="iconInput" accept="image/*">
             <?= err('icon') ?>
 
             <button type="submit" class="formButton">Add</button>
             <button type="reset" class="formButton" style="background: gray;">Reset</button>
         </form>
     </div>
+    <script>
+        document.getElementById('iconInput').addEventListener('change', function(event) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+    </script>
 </body>
 </html>
