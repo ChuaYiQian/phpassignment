@@ -87,6 +87,8 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
         .logout-btn:hover {
             background-color: #f1f1f1;
         }
+
+        a:hover{transform: translateY(-5px); transition-duration:0.2s;}
     </style>
 </head>
 <header>
@@ -104,6 +106,11 @@ if (isset($_SESSION['user_id']) && !isset($_SESSION['user_profile_pic'])) {
                 <li>
                     <a href="/order/userOrder.php">
                         <img src="/images/orderIcon.jpg" style="width: 30px; height: 30px;">
+                    </a>
+                </li>
+                <li>
+                    <a href="/order/userOrder.php">
+                        <img src="/images/notificationIcon.png" style="width: 30px; height: 30px;">
                     </a>
                 </li>
                 <li class="profile-dropdown">

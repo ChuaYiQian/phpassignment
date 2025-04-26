@@ -19,6 +19,31 @@ function formatDate($dateStr)
 {
     return date("Y-m-d", strtotime($dateStr));
 }
+
+function getTopProductImage($orderID, $db)
+{
+    $stmt = $db->prepare("SELECT oi.productID, oi.orderQuantity, p.productPicture
+                          FROM orderInformation oi
+                          JOIN product p ON oi.productID = p.productID
+                          WHERE oi.orderID = ?
+                          ORDER BY oi.orderQuantity DESC
+                          LIMIT 1");
+    $stmt->execute([$orderID]);
+    $topProduct = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($topProduct && !empty($topProduct['productPicture'])) {
+        $pictures = explode(',', $topProduct['productPicture']);
+        $firstPicture = trim($pictures[0]);
+
+        if (strpos($firstPicture, '/images/') !== 0) {
+            $firstPicture = '/images/' . $firstPicture;
+        }
+
+        return $firstPicture;
+    } else {
+        return '/images/default.png';
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -120,13 +145,15 @@ function formatDate($dateStr)
         </div>
     <?php else: ?>
         <?php foreach ($orders as $order): ?>
+            
+            <?php $productImage = getTopProductImage($order['orderID'], $_db); ?>
             <div class="order-card">
-                <img src="/images/Luffy.jpg">
+            <img src="<?= htmlspecialchars($productImage) ?>" alt="Product Image">
                 <div class="order-info">
                     <p><strong>Order ID:</strong> <?= $order['orderID'] ?></p>
                     <p><strong>Total Price:</strong> RM<?= number_format($order['orderTotal'], 2) ?></p>
                     <p><strong>Date:</strong> <?= formatDate($order['orderDate']) ?></p>
-                    <p><strong>Item qunatity:</strong> <?= formatDate($order['orderDate']) ?></p>
+                    <p><strong>Item quantity:</strong> <?=$totalQuantity = getOrderTotalQuantity($order['orderID'], $_db);?></p>
                 </div>
                 <div class="order-actions">
                     <?php if ($order['orderStatus'] === 'pending'): ?>
