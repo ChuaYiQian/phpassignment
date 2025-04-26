@@ -1,6 +1,15 @@
 <?php
 session_start();
 include 'base.php';
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../home.php");
+    temp('error', 'Access denied. Please log in to continue.');
+    exit;
+} else if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
+    header("Location: ../dashboard.php");
+    temp('error', 'Admins are not allowed to access this page.');
+    exit();
+}
 
 $orderID = $_POST['orderID'];
 $paymentMethod = $_POST['payment_method'];

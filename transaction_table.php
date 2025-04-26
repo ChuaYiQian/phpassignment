@@ -1,6 +1,11 @@
 <?php  
 include 'base.php'; 
 session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
+    header("Location: ../home.php");
+    temp('error', 'You do not have permission to access this page.');
+    exit();
+}
 
 $fields = [
     'transactionID' => 'Transaction ID',

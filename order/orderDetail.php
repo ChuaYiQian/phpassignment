@@ -10,10 +10,6 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: ../dashboard.php");
     temp('error', 'Admins are not allowed to access this page.');
     exit();
-} else if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: ../home.php");
-    temp('error', 'Invalid access method.');
-    exit;
 }
 
 if (!isset($_GET['orderID'])) {

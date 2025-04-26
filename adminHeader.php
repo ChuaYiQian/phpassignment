@@ -2,12 +2,6 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Check if admin is logged in
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
-    header("Location: ../home.php");
-    temp('error', 'You do not have permission to access this page.');
-    exit();
-}
 
 // Ensure profile picture is set in session
 if (!isset($_SESSION['user_profile_pic'])) {

@@ -1,13 +1,11 @@
 <?php
 session_start();
 require_once 'base.php';
-
-// Check if admin is logged in
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'customer') {
     header("Location: home.php");
+    temp('error', 'You do not have permission to access this page.');
     exit();
-}
-
+} 
 $user_id = $_SESSION['user_id'];
 $user = [];
 $errors = [];

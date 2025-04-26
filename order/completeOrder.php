@@ -2,9 +2,14 @@
 session_start();
 require_once '../base.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: /home.php");
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
+    header("Location: ../dashboard.php");
+    temp('error', 'Admins are not allowed to access this page.');
     exit();
+} else if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: ../home.php");
+    temp('error', 'Invalid access method.');
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['orderID'])) {
@@ -15,12 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['orderID'])) {
     $success = $stmt->execute([$orderID, $userID]);
 
     if ($success) {
-        header("Location: /order/maintenanceOrder.php");
+        header("Location: /order/userOrder.php");
         exit();
     } else {
         echo "Failed to recover the order.";
     }
 } else {
-    header("Location: /order/maintenanceOrder.php");
+    header("Location: /order/userOrder.php");
     exit();
 }

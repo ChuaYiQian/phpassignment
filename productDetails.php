@@ -3,6 +3,12 @@
 include 'header.php';
 include 'base.php';
 
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
+    header("Location: ../dashboard.php");
+    temp('error', 'Admins are not allowed to access this page.');
+    exit();
+}
+
 $id = $_GET['id'] ?? null;
 if (!$id) {
     echo "<p>Invalid product ID.</p>";
@@ -16,7 +22,9 @@ $stm = $_db->prepare('
     WHERE p.productID = ? 
       AND p.productStatus = "available" 
       AND c.categoryStatus = "available"
+      AND p.productQuantity > 0
 ');
+
 $stm->execute([$id]);
 $product = $stm->fetch(PDO::FETCH_OBJ);
 
