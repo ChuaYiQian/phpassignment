@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_name'] = $admin['userName'];
             $_SESSION['user_role'] = $admin['userRole'];
             $_SESSION['user_status'] = $admin['userStatus'];
-            $_SESSION['user_profile_pic'] = $admin['userProfilePicture']; // Add this line
+            $_SESSION['user_profile_pic'] = $admin['userProfilePicture']; 
             header("Location: admin_dashboard.php");
             exit();
         } else {
@@ -34,7 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Check if account is active
         if ($user['userStatus'] != 'active') {
-            header("Location: home.php?login=error&message=Your account has been blocked. Please contact an administrator.");
+            $_SESSION['login_error'] = "Your account has been blocked. Please contact an administrator.";
+            header("Location: home.php");
             exit();
         }
         
@@ -45,7 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_name'] = $user['userName'];
             $_SESSION['user_role'] = $user['userRole'];
             $_SESSION['user_status'] = $user['userStatus'];
-            $_SESSION['user_profile_pic'] = $user['userProfilePicture']; // Add this line
+            $_SESSION['user_profile_pic'] = $user['userProfilePicture'];
+            
+            // Set success message
+            $_SESSION['login_success'] = true;
             
             // Redirect based on role
             if ($user['userRole'] == 'admin') {
@@ -53,17 +57,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             } elseif ($user['userRole'] == 'staff') {
                 header("Location: home.php");
             } else {
-                header("Location: home.php?login=success");
+                header("Location: home.php");
             }
             exit();
         } else {
             // Incorrect password
-            header("Location: home.php?login=error&message=Incorrect password");
+            $_SESSION['login_error'] = "Incorrect password";
+            header("Location: home.php");
             exit();
         }
     } else {
         // User not found
-        header("Location: home.php?login=error&message=User not found");
+        $_SESSION['login_error'] = "User not found";
+        header("Location: home.php");
         exit();
     }
     

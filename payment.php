@@ -1,6 +1,8 @@
 <?php
 include 'base.php';
+require_once 'lib/phpqrcode/qrlib.php';
 session_start();
+
 
 $cart = $_SESSION['cart'] ?? [];
 $total = 0;
@@ -211,8 +213,15 @@ $discount = $_SESSION['discount'] ?? 0;
 
                 <!-- Tng -->
                 <div id="e-wallet" class="paidtng" style="display: none;">
-                    <label>Please Scan the QR to Pay</label>
-                    <img src="/images/paidtng.jpg" alt="e-wallet">
+                    <label>Please Scan the QR to Pay</label><br>
+                    <?php
+                        ob_start();
+                        $qrContent = "Pay RM" . number_format($finalTotal, 2) . " for Order #" . $orderID;
+                        QRcode::png($qrContent, null, QR_ECLEVEL_L, 4);
+                        $qrImage = base64_encode(ob_get_clean());
+                    ?>
+                    <img src="data:image/png;base64,<?= $qrImage ?>" alt="QR Code">
+                    <p>Amount: RM<?= number_format($finalTotal, 2) ?></p>
                 </div>
 
                 <!-- Bank Options -->

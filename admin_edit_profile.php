@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Handle file upload
     $profile_pic = $user['userProfilePicture'];
     if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] == UPLOAD_ERR_OK) {
-        $upload_dir = 'uploads/';
+        $upload_dir = 'images/';
         $file_name = uniqid() . '_' . basename($_FILES['profile_pic']['name']);
         $target_path = $upload_dir . $file_name;
         
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if ($imageFileType == "jpg" || $imageFileType == "png" || $imageFileType == "jpeg" || $imageFileType == "gif") {
                     if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $target_path)) {
                         // Delete old profile picture if it's not the default
-                        if ($profile_pic != 'uploads/default_profile.png' && file_exists($profile_pic)) {
+                        if ($profile_pic != 'images/default_profile.png' && file_exists($profile_pic)) {
                             unlink($profile_pic);
                         }
                         $profile_pic = $target_path;
