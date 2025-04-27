@@ -174,7 +174,7 @@ $discount = $_SESSION['discount'] ?? 0;
                     </form>
                     <?php if (isset($_SESSION['voucherError'])): ?>
                         <p style="color: red;"><?= $_SESSION['voucherError'] ?></p>
-                        <?php unset($_SESSION['voucherError']); ?> <!-- Clear voucher error after display -->
+                        <?php unset($_SESSION['voucherError']); ?> 
                     <?php endif; ?>
                 <?php endif; ?>
             </div>
