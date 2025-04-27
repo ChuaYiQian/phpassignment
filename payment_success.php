@@ -151,6 +151,11 @@ try {
     $_SESSION['error'] = "Failed to send confirmation email.";
 }
 
+unset($_SESSION['voucherID']);
+unset($_SESSION['taxRate']);
+unset($_SESSION['shippingFee']);
+
+
 ?>
 
 <!DOCTYPE html>

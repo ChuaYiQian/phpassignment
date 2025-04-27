@@ -71,15 +71,34 @@ if ($method_result && $method_result->num_rows > 0) {
 if (isset($_POST['apply_voucher'])) {
     $code = $_POST['voucher_code'] ?? '';
 
+    // Check if the voucher code is valid and active
     $stmt = $conn->prepare("SELECT * FROM voucher WHERE voucherCode = ? AND voucherStatus = 'Active' AND startDate <= CURDATE() AND endDate >= CURDATE()");
     $stmt->bind_param("s", $code);
     $stmt->execute();
     $voucher = $stmt->get_result()->fetch_assoc();
 
     if ($voucher) {
-        $_SESSION['voucherID'] = $voucher['voucherID'];
-        $_SESSION['voucherCode'] = $voucher['voucherCode'];
-        $_SESSION['discount'] = floatval($voucher['discountRate']);
+        $userID = $_SESSION['user_id'];
+
+        // Check if the user has already redeemed this voucher
+        $stmt = $conn->prepare("SELECT * FROM voucheredemption WHERE userID = ? AND voucherID = ?");
+        $stmt->bind_param("ss", $userID, $voucher['voucherID']);
+        $stmt->execute();
+        $usage = $stmt->get_result()->fetch_assoc();
+        
+        if ($usage) {
+            $_SESSION['voucherError'] = "You have already used this voucher.";
+            unset($_SESSION['voucherID'], $_SESSION['voucherCode'], $_SESSION['discount']);
+        } else {
+            $_SESSION['voucherID'] = $voucher['voucherID'];
+            $_SESSION['voucherCode'] = $voucher['voucherCode'];
+            $_SESSION['discount'] = floatval($voucher['discountRate']);
+
+            $stmt = $conn->prepare("INSERT INTO voucheredemption (userID, voucherID, redeemedAt) VALUES (?, ?, NOW())");
+            $stmt->bind_param("ss", $userID, $voucher['voucherID']);
+            $stmt->execute();
+        }
+
         header("Location: payment.php?orderID=" . urlencode($orderID)); 
         exit;
     } else {
@@ -155,7 +174,7 @@ $discount = $_SESSION['discount'] ?? 0;
                     </form>
                     <?php if (isset($_SESSION['voucherError'])): ?>
                         <p style="color: red;"><?= $_SESSION['voucherError'] ?></p>
-                        <?php unset($_SESSION['voucherError']); ?> 
+                        <?php unset($_SESSION['voucherError']); ?> <!-- Clear voucher error after display -->
                     <?php endif; ?>
                 <?php endif; ?>
             </div>
