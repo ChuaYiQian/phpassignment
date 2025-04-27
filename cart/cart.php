@@ -37,13 +37,25 @@ $stmt = $_db->prepare("
     FROM cartItem c
     JOIN product p ON c.productID = p.productID
     JOIN category cat ON p.categoryID = cat.categoryID
-    WHERE c.cartID = ?
-    AND p.productStatus = 'Available'
+    WHERE c.cartID = ? 
+    AND p.productStatus = 'Available' 
     AND cat.categoryStatus = 'Available'
 ");
 
 $stmt->execute([$cartID]);
 $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($cartItems as $item) {
+    if ($item['productQuantity'] == 0) {
+        $_db->prepare("DELETE FROM cartItem WHERE cartID = ? AND productID = ?")
+            ->execute([$cartID, $item['productID']]);
+    } else if ($item['cartQuantity'] > $item['productQuantity']) {
+        $newQuantity = $item['productQuantity'];
+        $_db->prepare("UPDATE cartItem SET cartQuantity = ? WHERE cartID = ? AND productID = ?")
+            ->execute([$newQuantity, $cartID, $item['productID']]);
+        $item['cartQuantity'] = $newQuantity;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -73,29 +85,39 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
         <div class="container">
             <?php if (empty($cartItems)): ?>
-                <img id="emptyCart" src="/images/emptyCart.png" height="100px" width="100px" style="margin-top:auto; margin-left:auto;margin-right:auto;">
+                <img id="emptyCart" src="/images/emptyCart.png" height="100px" width="100px"
+                    style="margin-top:auto; margin-left:auto;margin-right:auto;">
                 <p style="color:grey;margin: 20px; font-size: 1.6em; text-align:center; margin-bottom:auto;
-                font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-weight:bold;">Your cart is currently empty</p>
+                font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-weight:bold;">Your
+                    cart is currently empty</p>
             <?php else: ?>
                 <div style="margin: 15px;">
                     <label><input type="checkbox" id="select-all"> Select All</label>
                 </div>
-                <?php foreach ($cartItems as $item): ?>
+                <?php $stmt = $_db->prepare("
+    SELECT c.productID, c.cartQuantity, p.productName, p.productDescription, 
+           p.productPrice, p.productQuantity, p.productPicture 
+    FROM cartItem c
+    JOIN product p ON c.productID = p.productID
+    JOIN category cat ON p.categoryID = cat.categoryID
+    WHERE c.cartID = ? 
+    AND p.productStatus = 'Available' 
+    AND cat.categoryStatus = 'Available'
+");
+                $stmt->execute([$cartID]);
+                $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($cartItems as $item): ?>
                     <div class="container-product-card">
-
                         <div class="product-checkbox">
-                            <input type="checkbox" class="cart-checkbox"
-                                data-id="<?= $item['productID'] ?>"
-                                data-price="<?= $item['productPrice'] ?>"
-                                data-qty="<?= $item['cartQuantity'] ?>"
+                            <input type="checkbox" class="cart-checkbox" data-id="<?= $item['productID'] ?>"
+                                data-price="<?= $item['productPrice'] ?>" data-qty="<?= $item['cartQuantity'] ?>"
                                 data-name="<?= htmlspecialchars($item['productName']) ?>">
                         </div>
 
                         <div class="product-photo">
                             <?php $firstImage = explode(',', $item['productPicture'])[0]; ?>
                             <img src="/images/<?= htmlspecialchars(trim($firstImage)) ?>"
-                                alt="<?= htmlspecialchars($item['productName']) ?>"
-                                width="200" height="200">
+                                alt="<?= htmlspecialchars($item['productName']) ?>" width="200" height="200">
                         </div>
 
                         <div class="product-detail">
@@ -107,9 +129,8 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                             <div class="product-quantity">
                                 <form class="quantity-form" method="post" action="/cartItem/updateQuantity.php">
-                                    <input type="number" name="newQuantity"
-                                        value="<?= $item['cartQuantity'] ?>" min="1">
-
+                                    <input type="number" name="newQuantity" value="<?= $item['cartQuantity'] ?>" min="1"
+                                        max="<?= $item['productQuantity'] ?>">
                                     <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
                                     <input type="hidden" name="cartID" value="<?= $cartID ?>">
                                     <button type="submit">Update</button>
@@ -125,15 +146,15 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
                                 <input type="hidden" name="cartID" value="<?= $cartID ?>">
                                 <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
-                                <button type="button" onclick="showDeleteConfirmation()" style="border: none; background-color:white;">
+                                <button type="button" onclick="showDeleteConfirmation()"
+                                    style="border: none; background-color:white;">
                                     <img src="/images/deleteIcon.png" alt="Delete" width="30" height="30">
                                 </button>
                             </form>
-
-
                         </div>
                     </div>
                 <?php endforeach; ?>
+
             <?php endif; ?>
         </div>
     </div>
@@ -188,13 +209,13 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $('#selected-items-list').empty();
 
-            $('.cart-checkbox:checked').each(function() {
+            $('.cart-checkbox:checked').each(function () {
                 const item = {
                     id: $(this).data('id'),
                     name: $(this).data('name'),
                     price: parseFloat($(this).data('price')),
                     qty: parseInt($(this).data('qty')),
-                    total: function() {
+                    total: function () {
                         return this.price * this.qty;
                     }
                 };
@@ -229,14 +250,14 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         $(document).on('change', '.cart-checkbox', updateTotalPrice);
-        $(document).on('submit', '.quantity-form', function(e) {
+        $(document).on('submit', '.quantity-form', function (e) {
             e.preventDefault();
-            $.post($(this).attr('action'), $(this).serialize(), function() {
+            $.post($(this).attr('action'), $(this).serialize(), function () {
                 location.reload();
             });
         });
 
-        $('#select-all').change(function() {
+        $('#select-all').change(function () {
             $('.cart-checkbox').prop('checked', $(this).prop('checked'));
             updateTotalPrice();
         });
@@ -264,7 +285,7 @@ $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
             hideDeleteConfirmation();
         }
 
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('confirmation');
             if (event.target === modal) {
                 hideDeleteConfirmation();

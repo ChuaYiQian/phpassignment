@@ -161,6 +161,9 @@ if (!isset($_SESSION['user_profile_pic'])) {
     <div class="sidebar">
         <h2><?php echo "Welcome, " . htmlspecialchars($_SESSION['user_name']); ?></h2>
         <div class="side-btn">
+            <a href="/home.php">Home</a>
+        </div>
+        <div class="side-btn">
             <a href="/dashboard.php">Dashboard</a>
         </div>
         <div class="side-btn">

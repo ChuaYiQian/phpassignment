@@ -1,12 +1,5 @@
-
 <?php include 'base.php'; ?>
 <?php include 'header.php';
-
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
-    header("Location: ../dashboard.php");
-    temp('error', 'Admins are not allowed to access this page.');
-    exit();
-}
 
 $categories = $_db->query('SELECT categoryID, categoryName FROM category WHERE categoryStatus = "Available"')->fetchAll();
 
@@ -59,7 +52,7 @@ switch ($sort) {
         $sql .= ' ORDER BY p.salesCount DESC';
         break;
     default:
-        $sql .= ' ORDER BY p.productID DESC'; // or any default sorting you prefer
+        $sql .= ' ORDER BY p.productID DESC';
         break;
 }
 
@@ -77,9 +70,14 @@ $arr = $stm->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Page</title>
     <link rel="stylesheet" href="/css/product.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/home.js"></script>
 </head>
 
 <body>
+    <?php if ($msg = temp('error')): ?>
+        <div class="popup-message error"><?= htmlspecialchars($msg) ?></div>
+    <?php endif; ?>
     <div class="page-wrapper">
         <aside class="sidebar">
             <h2>Filter</h2>
@@ -127,11 +125,13 @@ $arr = $stm->fetchAll();
                         <p class="product-description"><?= $p->productDescription ?></p>
                     </a>
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <form action="/cartItem/addCartItem.php" method="POST">
-                            <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
-                            <input type="hidden" name="productID" value="<?= $p->productID ?>">
-                            <button type="submit" class="buy-button">Add To Cart</button>
-                        </form>
+                        <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin'): ?>
+                            <form action="/cartItem/addCartItem.php" method="POST">
+                                <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
+                                <input type="hidden" name="productID" value="<?= $p->productID ?>">
+                                <button type="submit" class="buy-button">Add To Cart</button>
+                            </form>
+                        <?php endif; ?>
                     <?php else: ?>
                         <button class="buy-button" onclick="openLoginPopup()">Add To Cart</button>
                     <?php endif; ?>
@@ -140,9 +140,6 @@ $arr = $stm->fetchAll();
         </div>
 
     </div>
-
 </body>
-
 </html>
-
 <?php include 'footer.php'; ?>

@@ -65,7 +65,8 @@ if ($existingItem) {
     }
     
     if ($newQuantity > $product->productQuantity) {
-        echo "Total quantity in cart exceeds available stock.";
+        header("Location: ../product.php");
+        temp('error', 'Total quantity in cart exceeds available stock.');
         exit;
     }
     

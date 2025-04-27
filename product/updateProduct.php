@@ -125,8 +125,8 @@ if (is_post()) {
     // Validate: quantity
     if ($productQuantity == '') {
         $_err['productQuantity'] = 'Required';
-    } else if ($productQuantity < 1) {
-        $_err['productQuantity'] = 'Cannot less than 1';
+    } else if ($productQuantity < 0) {
+        $_err['productQuantity'] = 'Cannot less than 0';
     }
 
     // Validate: status

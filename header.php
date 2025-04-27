@@ -14,6 +14,7 @@ if (isset($_SESSION['user_id'])) {
         if ($result->num_rows == 1) {
             $user = $result->fetch_assoc();
             $_SESSION['user_profile_pic'] = $user['userProfilePicture'];
+            $_SESSION['user_role'] = $user['userRole'];
         }
         $stmt->close();
     }
@@ -123,33 +124,44 @@ if (isset($_SESSION['user_id'])) {
             <li><a href="/home.php">Home</a></li>
             <li><a href="/product.php">Products</a></li>
             <?php if (isset($_SESSION['user_id'])): ?>
-                <li>
-                    <a href="/cart/cart.php" class="cart-icon-wrapper">
-                        <img src="/images/addToCart.png" style="width: 30px; height: 30px;">
-                        <?php if (isset($_SESSION['cart_count']) && $_SESSION['cart_count'] > 0): ?>
-                            <span class="cart-count"><?php echo $_SESSION['cart_count']; ?></span>
-                        <?php endif; ?>
-                    </a>
-                </li>
-                <li>
-                    <a href="/order/userOrder.php">
-                        <img src="/images/orderIcon.jpg" style="width: 30px; height: 30px;">
-                    </a>
-                </li>
+                <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin'): ?>
+                    <li>
+                        <a href="/cart/cart.php" class="cart-icon-wrapper">
+                            <img src="/images/addToCart.png" style="width: 30px; height: 30px;">
+                            <?php if (isset($_SESSION['cart_count']) && $_SESSION['cart_count'] > 0): ?>
+                                <span class="cart-count"><?php echo $_SESSION['cart_count']; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/order/userOrder.php">
+                            <img src="/images/orderIcon.jpg" style="width: 30px; height: 30px;">
+                        </a>
+                    </li>
+                <?php endif; ?>
+
                 <li class="profile-dropdown">
                     <button class="profile-btn">
-                        <img src="<?php echo htmlspecialchars($_SESSION['user_profile_pic'] ?? '/uploads/default_profile.png'); ?>" class="profile-img" alt="Profile">
+                        <img src="<?php echo htmlspecialchars($_SESSION['user_profile_pic'] ?? '/uploads/default_profile.png'); ?>"
+                            class="profile-img" alt="Profile">
                     </button>
                     <div class="dropdown-content">
                         <a href="/view_profile.php">View Profile</a>
+
+                        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                            <a href="/dashboard.php">Dashboard</a>
+                        <?php endif; ?>
+
                         <form action="/logout.php" method="POST" style="display:inline;">
                             <button type="submit" class="logout-btn">Logout</button>
                         </form>
                     </div>
+
                 </li>
             <?php else: ?>
                 <li><button class="login-btn" onclick="openLoginPopup()">Login</button></li>
             <?php endif; ?>
+
         </ul>
     </nav>
 </header>
@@ -158,7 +170,6 @@ if (isset($_SESSION['user_id'])) {
         <span class="close" onclick="closeLoginPopup()">&times;</span>
         <h2>Login</h2>
         <form action="login_process.php" method="POST">
-            <!-- Error message container -->
             <div id="loginError" class="error-message" style="display: none;"></div>
 
             <label for="username">Username/Email:</label>
@@ -174,7 +185,6 @@ if (isset($_SESSION['user_id'])) {
     </div>
 </div>
 
-<!-- Success popup -->
 <div id="successPopup" class="popup" style="display:none; z-index:100;">
     <div class="popup-content">
         <span class="close" onclick="closeSuccessPopup()">&times;</span>
@@ -184,7 +194,6 @@ if (isset($_SESSION['user_id'])) {
     </div>
 </div>
 
-<!-- Logout success popup -->
 <div id="logoutPopup" class="popup" style="display:none; z-index:100;">
     <div class="popup-content">
         <span class="close" onclick="closeLogoutPopup()">&times;</span>
@@ -235,7 +244,7 @@ if (isset($_SESSION['user_id'])) {
     }
 
     // Check for messages when page loads
-    window.onload = function() {
+    window.onload = function () {
         <?php if (isset($_SESSION['login_error'])): ?>
             showLoginError("<?php echo addslashes($_SESSION['login_error']); ?>");
             openLoginPopup();

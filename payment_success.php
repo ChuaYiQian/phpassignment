@@ -37,8 +37,28 @@ $stmt = $_db->prepare("SELECT userEmail, userAddress FROM user WHERE userID = ?"
 $stmt->execute([$userID]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+$payStmt = $_db->prepare("SELECT paymentDescription FROM paymentmethod WHERE paymentID = ?");
+$payStmt->execute([$paymentID]);
+$paymentMethodName = $payStmt->fetchColumn();
+
 $recipientEmail = $user ? $user['userEmail'] : null; 
 $userAddress = $user ? $user['userAddress'] : null;
+
+$orderID = $_GET['orderID'] ?? '';
+
+if ($orderID) {
+    $sql = "SELECT transactionDate FROM transaction WHERE orderID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $orderID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $transaction = $result->fetch_assoc();
+    $transactionDate = $transaction['transactionDate'] ?? null;
+}
+
+date_default_timezone_set('Asia/Kuala_Lumpur'); 
+$transactionDate = date('Y-m-d H:i:s');
+$currentDateTime = $transactionDate;
 
 // Generate the Transaction ID
 function generateTransactionID($db) {
@@ -82,16 +102,42 @@ if (!$insertSuccess) {
 // Prepare email content
 $subject = "Payment Confirmation - Order #$orderID";
 $body = "
-    <h2>Thank you for your payment!</h2>
+    <h2 style='color: #4CAF50;'>Thank you for your payment!</h2>
     <p>Your payment for Order <strong>#$orderID</strong> has been received successfully.</p>
-    <p>You can now continue shopping or view your order history.</p>
+    <h3>Payment Receipt</h3>
+    <table style='border-collapse: collapse; width: 100%; max-width: 600px;'>
+        <tr style='background-color: #f2f2f2;'>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Item</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Details</th>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 8px;'>Order ID</td>
+            <td style='border: 1px solid #ddd; padding: 8px;'>$orderID</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 8px;'>Payment Method</td>
+            <td style='border: 1px solid #ddd; padding: 8px;'>$paymentMethodName</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 8px;'>Payment Total</td>
+            <td style='border: 1px solid #ddd; padding: 8px;'>RM " . number_format($paymentTotal, 2) . "</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 8px;'>Shipping Fee</td>
+            <td style='border: 1px solid #ddd; padding: 8px;'>RM " . number_format($shippingFee, 2) . "</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 8px;'>Tax (6%)</td>
+            <td style='border: 1px solid #ddd; padding: 8px;'>RM " . number_format($paymentTotal * $taxRate, 2) . "</td>
+        </tr>
+    </table>
+    <p><strong>Transaction Date:</strong> " . htmlspecialchars($transactionDate) . "</p>
+    <br>
+    <h3>Shipping Address</h3>
+    <p>" . htmlspecialchars($userAddress ?? 'No address available') . "</p>
+    <br>
+    <p style='color: gray; font-size: 12px;'>This is an automated e-receipt. No signature is required.</p>
 ";
-
-if ($userAddress) {
-    $body .= "<p>Shipping Address: <strong>" . htmlspecialchars($userAddress) . "</strong></p>";
-} else {
-    $body .= "<p>No shipping address available.</p>";
-}
 
 try {
     $mail = get_mail(); 
@@ -104,6 +150,11 @@ try {
     error_log("Email Error: " . $mail->ErrorInfo);
     $_SESSION['error'] = "Failed to send confirmation email.";
 }
+
+unset($_SESSION['voucherID']);
+unset($_SESSION['taxRate']);
+unset($_SESSION['shippingFee']);
+
 
 ?>
 
