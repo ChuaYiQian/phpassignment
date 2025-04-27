@@ -9,51 +9,52 @@ if (session_status() === PHP_SESSION_NONE) {
 $errors = [];
 $success = false;
 
-// Function to validate reCAPTCHA
-function validateCaptcha($recaptchaResponse) {
-    $secretKey = '6LdaT04qAAAAAF3iHJS202HUWb6tI4agZjUH5igi'; // Use the secret key from register.php
+// reCAPTCHA validation function
+function validateRecaptcha($response) {
+    $secretKey = '6LdaT04qAAAAAF3iHJS202HUWb6tI4agZjUH5igi'; // Use your own secret key
     $verifyURL = 'https://www.google.com/recaptcha/api/siteverify';
 
-    $response = file_get_contents($verifyURL . '?secret=' . $secretKey . '&response=' . $recaptchaResponse);
-    $responseData = json_decode($response);
+    $responseData = file_get_contents($verifyURL . '?secret=' . $secretKey . '&response=' . $response);
+    $responseData = json_decode($responseData);
 
     return $responseData->success;
 }
 
-// Handle AJAX validation requests
-if (isset($_POST['validate']) && $_POST['validate'] === 'true') {
-    header('Content-Type: application/json');
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Handle AJAX validation requests
+    if (isset($_POST['validate']) && $_POST['validate'] === 'true') {
+        header('Content-Type: application/json');
 
-    $field = isset($_POST['username']) ? 'userName' : (isset($_POST['email']) ? 'userEmail' : null);
-    $value = $_POST[$field === 'userName' ? 'username' : 'email'] ?? null;
+        $field = isset($_POST['username']) ? 'userName' : (isset($_POST['email']) ? 'userEmail' : null);
+        $value = $_POST[$field === 'userName' ? 'username' : 'email'] ?? null;
+        $dbField = $field;
 
-    if (!$field || !$value) {
-        echo json_encode(['error' => 'Invalid request']);
+        if (!$field || !$value) {
+            echo json_encode(['error' => 'Invalid request']);
+            exit;
+        }
+
+        $result = ['status' => 'available'];
+
+        try {
+            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM user WHERE $dbField = ?");
+            $stmt->bind_param("s", $value);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            
+            if ($result['count'] > 0) {
+                echo json_encode(['status' => 'duplicate']);
+            } else {
+                echo json_encode(['status' => 'available']);
+            }
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            echo json_encode(['error' => 'Database error occurred']);
+        }
         exit;
     }
 
-    $result = ['status' => 'available'];
-
-    try {
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM user WHERE $field = ?");
-        $stmt->bind_param("s", $value);
-        $stmt->execute();
-        $stmt->bind_result($count);
-        $stmt->fetch();
-        
-        if ($count > 0) {
-            $result['status'] = 'duplicate';
-        }
-        echo json_encode($result);
-    } catch (Exception $e) {
-        error_log($e->getMessage());
-        echo json_encode(['error' => 'Database error occurred']);
-    }
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
-    // Validate and sanitize inputs
+    // Regular form submission
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
@@ -62,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
     $phone = trim($_POST['phone']);
     $address = trim($_POST['address']);
     $age = intval($_POST['age']);
-    $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+    $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
 
     // Validate inputs
     if (empty($name)) $errors[] = "Name is required";
@@ -75,9 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
     if ($age < 13) $errors[] = "You must be at least 13 years old";
     
     // Validate reCAPTCHA
-    if (empty($recaptchaResponse)) {
-        $errors[] = "Please complete the reCAPTCHA verification";
-    } else if (!validateCaptcha($recaptchaResponse)) {
+    if (!validateRecaptcha($recaptcha_response)) {
         $errors[] = "reCAPTCHA verification failed. Please try again.";
     }
 
@@ -160,7 +159,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
     <title>Sign Up - PopZone Collectibles</title>
     <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -193,8 +191,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
         input[type="email"],
         input[type="password"],
         input[type="tel"],
-        input[type="number"],
         input[type="file"],
+        input[type="number"],
         select,
         textarea {
             width: 100%;
@@ -235,46 +233,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
             border: 3px solid #3498db;
         }
         .feedback {
-            color: red;
             font-size: 12px;
-            display: block;
-            margin-top: 5px;
+            padding: 5px 0;
+            transition: all 0.3s ease;
         }
-        /* Style for form validation */
-        .available {
+        .feedback.valid {
+            color: green;
+        }
+        .feedback.invalid {
+            color: red;
+        }
+        input.valid {
             border: 1px solid green;
         }
-        .duplicate {
+        input.invalid {
             border: 1px solid red;
         }
-        /* reCAPTCHA container styling */
-        .g-recaptcha {
-            margin: 15px 0;
-        }
-        /* Field icon styling similar to register.php */
-        .form-group .icon {
-            position: absolute;
-            left: 10px;
-            top: 38px;
-            color: #555;
-        }
-        .form-group .field-with-icon {
-            padding-left: 35px;
-        }
-        .form-group .toggle-password {
-            position: absolute;
-            right: 10px;
-            top: 38px;
-            cursor: pointer;
-            color: #555;
-        }
-        .form-group .checkbox {
-            margin-top: 10px;
-        }
-        .form-group .checkbox input {
-            margin-right: 5px;
-        }
-        /* Webcam styles */
         .webcam-container {
             display: none;
             margin-top: 10px;
@@ -305,6 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
             margin-top: 10px;
         }
     </style>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <?php include 'header.php'; ?>
@@ -325,11 +300,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
                 <p>Registration successful! You can now <a href="home.php">login</a>.</p>
             </div>
         <?php else: ?>
-            <form action="signup.php" method="POST" enctype="multipart/form-data" id="signupForm">
+            <form id="signupForm" action="signup.php" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>Profile Picture:</label>
                     <img id="profilePicPreview" src="images/default_profile.png" class="profile-pic-preview" alt="Profile Picture Preview">
-                    <input type="file" id="profile_pic" name="profile_pic" accept="image/*" onchange="previewImage(event)">
+                    <input type="file" id="profile_pic" name="profile_pic" accept="image/*">
                     <span id="profile_picFeedback" class="feedback"></span>
                     <button type="button" id="captureButton">Capture from Webcam</button>
                     <div id="webcamContainer" class="webcam-container">
@@ -341,71 +316,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
                 
                 <div class="form-group">
                     <label for="name">Full Name:</label>
-                    <span class="icon"><i class="fa fa-user" aria-hidden="true"></i></span>
-                    <input type="text" id="name" name="name" class="field-with-icon" required value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>">
+                    <input type="text" id="name" name="name" required value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>">
                     <span id="nameFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">Email:</label>
-                    <span class="icon"><i class="fa fa-envelope-o" aria-hidden="true"></i></span>
-                    <input type="email" id="email" name="email" class="field-with-icon" required value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
+                    <input type="email" id="email" name="email" required value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
                     <span id="emailFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Password (min 8 characters):</label>
-                    <span class="icon"><i class="fa fa-unlock-alt" aria-hidden="true"></i></span>
-                    <input type="password" id="password" name="password" class="field-with-icon" required>
-                    <span class="toggle-password" onclick="togglePassword('password')"><i class="fa fa-eye" aria-hidden="true"></i></span>
+                    <input type="password" id="password" name="password" required>
                     <span id="passwordFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="confirm_password">Confirm Password:</label>
-                    <span class="icon"><i class="fa fa-unlock-alt" aria-hidden="true"></i></span>
-                    <input type="password" id="confirm_password" name="confirm_password" class="field-with-icon" required>
-                    <span class="toggle-password" onclick="togglePassword('confirm_password')"><i class="fa fa-eye" aria-hidden="true"></i></span>
-                    <span id="confirmPasswordFeedback" class="feedback"></span>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                    <span id="confirm_passwordFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="gender">Gender:</label>
-                    <span class="icon"><i class="fa fa-venus-mars" aria-hidden="true"></i></span>
-                    <select id="gender" name="gender" class="field-with-icon" required>
+                    <select id="gender" name="gender" required>
                         <option value="">Select Gender</option>
                         <option value="M" <?php echo (isset($_POST['gender']) && $_POST['gender'] == 'M') ? 'selected' : ''; ?>>Male</option>
                         <option value="F" <?php echo (isset($_POST['gender']) && $_POST['gender'] == 'F') ? 'selected' : ''; ?>>Female</option>
                     </select>
+                    <span id="genderFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="phone">Phone Number:</label>
-                    <span class="icon"><i class="fa fa-phone" aria-hidden="true"></i></span>
-                    <input type="tel" id="phone" name="phone" class="field-with-icon" required value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>">
+                    <input type="tel" id="phone" name="phone" required value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>">
+                    <span id="phoneFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="address">Address:</label>
-                    <span class="icon"><i class="fa fa-home" aria-hidden="true"></i></span>
-                    <textarea id="address" name="address" class="field-with-icon" required><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
+                    <textarea id="address" name="address" required><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
+                    <span id="addressFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="age">Age:</label>
-                    <span class="icon"><i class="fa fa-birthday-cake" aria-hidden="true"></i></span>
-                    <input type="number" id="age" name="age" class="field-with-icon" min="13" required value="<?php echo isset($_POST['age']) ? htmlspecialchars($_POST['age']) : ''; ?>">
-                </div>
-                
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
-                    <label for="agreeTerms">I agree to the <a href="#">terms and conditions</a>.</label>
+                    <input type="number" id="age" name="age" min="13" required value="<?php echo isset($_POST['age']) ? htmlspecialchars($_POST['age']) : ''; ?>">
+                    <span id="ageFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
-                    <div class="g-recaptcha" data-sitekey="6LdaT04qAAAAAHSIocWGPfx69T4vNOzMf4pz3vlZ"></div>
-                    <span id="captchaFeedback" class="feedback"></span>
+                    <div class="checkbox">
+                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                        <label for="agreeTerms">I agree to the <a href="#">terms and conditions</a>.</label>
+                        <span id="agreeTermsFeedback" class="feedback"></span>
+                    </div>
                 </div>
+
+                <div class="g-recaptcha" data-sitekey="6LdaT04qAAAAAHSIocWGPfx69T4vNOzMf4pz3vlZ"></div>
+                <span id="recaptchaFeedback" class="feedback"></span>
                 
                 <button type="submit">Sign Up</button>
             </form>
@@ -417,268 +387,386 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['validate'])) {
     </div>
 
     <script>
-        // Image preview functionality
-        function previewImage(event) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                const preview = document.getElementById('profilePicPreview');
-                preview.src = reader.result;
-            }
-            reader.readAsDataURL(event.target.files[0]);
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded');
+        initializeSignupForm();
+        initializeWebcam();
+    });
 
-        // Password toggle functionality
-        function togglePassword(fieldId) {
-            const passwordField = document.getElementById(fieldId);
-            const icon = event.currentTarget.querySelector('i');
-            
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
+    function initializeSignupForm() {
+        const fields = ['name', 'email', 'password', 'confirm_password', 'phone', 'address', 'age', 'gender', 'profile_pic'];
 
-        // Form validation
-        document.addEventListener('DOMContentLoaded', function() {
-            const emailField = document.getElementById('email');
-            const nameField = document.getElementById('name');
-            const passwordField = document.getElementById('password');
-            const confirmPasswordField = document.getElementById('confirm_password');
-            
-            // Debounce function to limit API calls
-            function debounce(func, wait) {
-                let timeout;
-                return function(...args) {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(this, args), wait);
-                };
-            }
-            
-            // Email validation with debounce
-            if (emailField) {
-                emailField.addEventListener('input', debounce(function() {
-                    if (this.value.length >= 3) {
-                        validateField('email', this.value);
-                    }
-                }, 500));
-            }
-
-            // Name validation with debounce
-            if (nameField) {
-                nameField.addEventListener('input', debounce(function() {
-                    if (this.value.length >= 3) {
-                        validateField('username', this.value);
-                    }
-                }, 500));
-            }
-
-            // Password validation
-            if (passwordField) {
-                passwordField.addEventListener('input', function() {
-                    const feedback = document.getElementById('passwordFeedback');
-                    if (this.value.length < 8) {
-                        feedback.textContent = 'Password must be at least 8 characters long.';
-                    } else {
-                        feedback.textContent = '';
-                    }
-                    
-                    // Update confirm password validation if it has a value
-                    if (confirmPasswordField.value) {
-                        validatePasswordMatch();
-                    }
-                });
-            }
-
-            // Confirm password validation
-            if (confirmPasswordField && passwordField) {
-                confirmPasswordField.addEventListener('input', validatePasswordMatch);
-            }
-            
-            // Form submission validation
-            const form = document.getElementById('signupForm');
-            if (form) {
-                form.addEventListener('submit', function(event) {
-                    // Check if terms are agreed to
-                    const agreeTerms = document.getElementById('agreeTerms');
-                    if (!agreeTerms.checked) {
-                        event.preventDefault();
-                        document.getElementById('captchaFeedback').textContent = 'You must agree to the terms and conditions.';
-                        return;
-                    }
-                    
-                    // Check reCAPTCHA
-                    const recaptchaResponse = grecaptcha.getResponse();
-                    if (!recaptchaResponse) {
-                        event.preventDefault();
-                        document.getElementById('captchaFeedback').textContent = 'Please complete the reCAPTCHA verification.';
-                    }
-                });
-            }
-            
-            function validatePasswordMatch() {
-                const feedback = document.getElementById('confirmPasswordFeedback');
-                if (confirmPasswordField.value !== passwordField.value) {
-                    feedback.textContent = 'Passwords do not match.';
+        fields.forEach(field => {
+            const input = document.getElementById(field);
+            if (input) {
+                if (field === 'profile_pic') {
+                    input.addEventListener('change', validateProfilePic);
                 } else {
-                    feedback.textContent = '';
+                    input.addEventListener('input', () => validateField(field));
+                    input.addEventListener('blur', () => validateField(field));
                 }
             }
         });
 
-        function validateField(field, value) {
-            if (!value || value.length < 3) return;
-
-            const fieldName = field === 'username' ? 'name' : 'email';
-            const fieldElement = document.getElementById(fieldName);
-            const feedback = document.getElementById(`${fieldName}Feedback`);
+        document.getElementById('signupForm').addEventListener('submit', function(event) {
+            let hasErrors = false;
             
-            // Show loading state
-            feedback.textContent = 'Checking...';
+            fields.forEach(field => {
+                validateField(field);
+                const input = document.getElementById(field);
+                if (input && input.classList.contains('invalid')) {
+                    hasErrors = true;
+                }
+            });
 
-            // Ajax validation for duplicates
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'signup.php', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onreadystatechange = function() {
-                if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            // Check recaptcha
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                const feedback = document.getElementById('recaptchaFeedback');
+                feedback.textContent = 'Please complete the reCAPTCHA verification.';
+                feedback.className = 'feedback invalid';
+                hasErrors = true;
+            }
+
+            // Check terms agreement
+            const agreeTerms = document.getElementById('agreeTerms');
+            if (!agreeTerms.checked) {
+                const feedback = document.getElementById('agreeTermsFeedback');
+                feedback.textContent = 'You must agree to the terms and conditions.';
+                feedback.className = 'feedback invalid';
+                hasErrors = true;
+            }
+
+            if (hasErrors) {
+                event.preventDefault();
+                alert('Please correct the errors before submitting.');
+            }
+        });
+    }
+
+    function validateField(field) {
+    const input = document.getElementById(field);
+    const feedback = document.getElementById(`${field}Feedback`);
+
+    if (!input || !feedback) return;
+
+    const value = input.value.trim();
+
+    switch (field) {
+        case 'name':
+            if (value === '') {
+                setInvalid(input, feedback, 'Name cannot be empty.');
+            } else {
+                checkDuplicate('name', 'username');
+            }
+            break;
+        case 'email':
+            if (value === '') {
+                setInvalid(input, feedback, 'Email cannot be empty.');
+            } else if (!isValidEmail(value)) {
+                setInvalid(input, feedback, 'Please enter a valid email address.');
+            } else {
+                checkDuplicate('email', 'email');
+            }
+            break;
+        case 'phone':
+            validatePhone();
+            break;
+        case 'address':
+            if (value === '') {
+                setInvalid(input, feedback, 'Address cannot be empty.');
+            } else {
+                setValid(input, feedback, 'Valid address.');
+            }
+            break;
+        case 'age':
+            validateAge();
+            break;
+        case 'gender':
+            if (value === '') {
+                setInvalid(input, feedback, 'Please select a gender.');
+            } else {
+                setValid(input, feedback, 'Valid selection.');
+            }
+            break;
+        default:
+            if (value === '') {
+                // Custom message for confirm_password field
+                if (field === 'confirm_password') {
+                    setInvalid(input, feedback, 'Confirm password cannot be empty.');
+                } else {
+                    setInvalid(input, feedback, `${field.charAt(0).toUpperCase() + field.slice(1)} cannot be empty.`);
+                }
+            } else {
+                setValid(input, feedback, '');
+            }
+    }
+}
+
+    function validatePhone() {
+        var phone = document.getElementById("phone").value.trim();
+        var phoneFeedback = document.getElementById("phoneFeedback");
+
+        var phoneRegex = /^\+?[0-9]{10,14}$/;
+
+        if (phone === "") {
+            setInvalid(document.getElementById("phone"), phoneFeedback, 'Phone number cannot be empty.');
+        } else if (!phoneRegex.test(phone)) {
+            setInvalid(document.getElementById("phone"), phoneFeedback, 'Invalid phone number format. Please enter 10-14 digits.');
+        } else {
+            setValid(document.getElementById("phone"), phoneFeedback, 'Valid phone number.');
+        }
+    }
+
+    function validateAge() {
+        var age = document.getElementById("age").value.trim();
+        var ageFeedback = document.getElementById("ageFeedback");
+
+        if (age === "") {
+            setInvalid(document.getElementById("age"), ageFeedback, 'Age cannot be empty.');
+        } else if (isNaN(age) || parseInt(age) < 13) {
+            setInvalid(document.getElementById("age"), ageFeedback, 'You must be at least 13 years old to register.');
+        } else {
+            setValid(document.getElementById("age"), ageFeedback, 'Valid age.');
+        }
+    }
+
+    function validateProfilePic() {
+        var input = document.getElementById('profile_pic');
+        var feedback = document.getElementById('profile_picFeedback');
+        
+        if (!input.files || input.files.length === 0) {
+            setValid(input, feedback, ''); // Optional file, so no validation needed if empty
+            return;
+        }
+        
+        var file = input.files[0];
+        var validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        var maxSize = 5 * 1024 * 1024; // 5MB
+        
+        if (!validTypes.includes(file.type)) {
+            setInvalid(input, feedback, 'Invalid file type. Please upload an image (JPG, PNG, or GIF).');
+            return;
+        }
+        
+        if (file.size > maxSize) {
+            setInvalid(input, feedback, 'File is too large. Please upload an image less than 5MB.');
+            return;
+        }
+        
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profilePicPreview').src = e.target.result;
+            setValid(input, feedback, 'Valid image selected.');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function isValidEmail(email) {
+        var re = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        return re.test(email);
+    }
+
+    function checkDuplicate(fieldId, fieldType) {
+        const field = document.getElementById(fieldId);
+        const feedback = document.getElementById(`${fieldId}Feedback`);
+        const fieldValue = field.value.trim();
+
+        if (fieldValue === "") {
+            setInvalid(field, feedback, 'This field cannot be empty.');
+            return;
+        }
+
+        if (fieldType === 'email' && !isValidEmail(fieldValue)) {
+            setInvalid(field, feedback, 'Invalid email format.');
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "signup.php", true);
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
                     try {
-                        const response = JSON.parse(this.responseText);
-                        fieldElement.classList.remove('available', 'duplicate');
-                        
+                        var response = JSON.parse(xhr.responseText);
+
                         if (response.status === 'duplicate') {
-                            fieldElement.classList.add('duplicate');
-                            feedback.textContent = `This ${field} is already taken.`;
-                            feedback.style.color = 'red';
+                            setInvalid(field, feedback, `${fieldType.charAt(0).toUpperCase() + fieldType.slice(1)} already exists.`);
                         } else if (response.status === 'available') {
-                            fieldElement.classList.add('available');
-                            feedback.textContent = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is available.`;
-                            feedback.style.color = 'green';
+                            setValid(field, feedback, `${fieldType.charAt(0).toUpperCase() + fieldType.slice(1)} is available.`);
+                        } else {
+                            setInvalid(field, feedback, `Error in checking ${fieldType}.`);
                         }
                     } catch (e) {
-                        console.error('Error parsing response:', e);
-                        feedback.textContent = '';
+                        console.error("Error parsing JSON response:", e);
+                        setInvalid(field, feedback, 'Unexpected response from the server.');
                     }
-                }
-            };
-            xhr.send(`validate=true&${field}=${encodeURIComponent(value)}`);
-        }
-
-        // Webcam functionality
-        function initializeWebcam() {
-            const captureButton = document.getElementById('captureButton');
-            const webcamContainer = document.getElementById('webcamContainer');
-            const webcam = document.getElementById('webcam');
-            const takePhotoButton = document.getElementById('takePhoto');
-            const canvas = document.getElementById('photoCanvas');
-            
-            let stream = null;
-            
-            captureButton.addEventListener('click', function() {
-                if (webcamContainer.style.display === 'none' || webcamContainer.style.display === '') {
-                    webcamContainer.style.display = 'block';
-                    
-                    navigator.mediaDevices.getUserMedia({ video: true })
-                        .then(function(mediaStream) {
-                            stream = mediaStream;
-                            webcam.srcObject = mediaStream;
-                        })
-                        .catch(function(error) {
-                            console.error("Error accessing webcam:", error);
-                            alert("Error accessing webcam. Please make sure your camera is connected and you've granted permission.");
-                            webcamContainer.style.display = 'none';
-                        });
                 } else {
-                    webcamContainer.style.display = 'none';
-                    if (stream) {
-                        stream.getTracks().forEach(track => track.stop());
-                    }
+                    console.error("Error: Could not contact the server.");
+                    setInvalid(field, feedback, `Unable to check ${fieldType} due to server error.`);
                 }
-            });
-            
-            takePhotoButton.addEventListener('click', function() {
-                canvas.width = webcam.videoWidth;
-                canvas.height = webcam.videoHeight;
-                
-                const context = canvas.getContext('2d');
-                context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
-                
-                const imageDataUrl = canvas.toDataURL('image/png');
-                
-                // Update preview
-                document.getElementById('profilePicPreview').src = imageDataUrl;
-                
-                // Convert data URL to Blob and create a File
-                const blob = dataURLtoBlob(imageDataUrl);
-                const file = new File([blob], "webcam-capture.png", { type: "image/png" });
-                
-                // Create a FileList-like object
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                
-                // Set the files property of the file input
-                document.getElementById('profile_pic').files = dataTransfer.files;
-                
-                // Validate the profile pic
-                validateProfilePic();
+            }
+        };
 
-                // Stop webcam stream
+        xhr.send(`validate=true&${fieldType}=${encodeURIComponent(fieldValue)}`);
+    }
+
+    // Webcam functionality - Fixed version
+function initializeWebcam() {
+    const captureButton = document.getElementById('captureButton');
+    const webcamContainer = document.getElementById('webcamContainer');
+    const webcam = document.getElementById('webcam');
+    const takePhotoButton = document.getElementById('takePhoto');
+    const canvas = document.getElementById('photoCanvas');
+    const profilePicPreview = document.getElementById('profilePicPreview');
+    const profilePicInput = document.getElementById('profile_pic');
+    
+    let stream = null;
+    
+    // Toggle webcam on/off
+    captureButton.addEventListener('click', async function() {
+        try {
+            if (webcamContainer.style.display === 'block') {
+                // Webcam is currently showing - turn it off
+                webcamContainer.style.display = 'none';
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
+                    stream = null;
                 }
-                
-                // Hide webcam container
-                webcamContainer.style.display = 'none';
+                return;
+            }
+            
+            // Show webcam container
+            webcamContainer.style.display = 'block';
+            
+            // Get webcam stream with ideal constraints
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: 'user' // Front camera
+                },
+                audio: false
             });
+            
+            // Set video source and play
+            webcam.srcObject = stream;
+            webcam.play();
+            
+            // Change button text
+            captureButton.textContent = 'Close Webcam';
+        } catch (error) {
+            console.error("Error accessing webcam:", error);
+            alert("Could not access the webcam. Please ensure you've granted camera permissions and that no other application is using the camera.");
+            webcamContainer.style.display = 'none';
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
         }
-
-        // Helper function: Convert Data URL to Blob
-        function dataURLtoBlob(dataURL) {
-            const parts = dataURL.split(';base64,');
-            const contentType = parts[0].split(':')[1];
-            const raw = window.atob(parts[1]);
-            const rawLength = raw.length;
-            const uInt8Array = new Uint8Array(rawLength);
-            
-            for (let i = 0; i < rawLength; ++i) {
-                uInt8Array[i] = raw.charCodeAt(i);
-            }
-            
-            return new Blob([uInt8Array], { type: contentType });
+    });
+    
+    // Capture photo from webcam
+    takePhotoButton.addEventListener('click', function() {
+        if (!stream) {
+            alert("Webcam is not active. Please start the webcam first.");
+            return;
         }
-
-        function validateProfilePic() {
-            var input = document.getElementById('profile_pic');
-            var feedback = document.getElementById('profile_picFeedback');
+        
+        try {
+            // Set canvas dimensions to match video
+            const videoWidth = webcam.videoWidth;
+            const videoHeight = webcam.videoHeight;
+            canvas.width = videoWidth;
+            canvas.height = videoHeight;
             
-            if (!input.files || input.files.length === 0) {
-                // Optional file, so no validation needed if empty
-                return;
-            }
+            // Draw current video frame to canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(webcam, 0, 0, videoWidth, videoHeight);
             
-            var file = input.files[0];
-            var validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            var maxSize = 5 * 1024 * 1024; // 5MB
+            // Convert canvas to data URL (JPEG with 90% quality)
+            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
             
-            if (!validTypes.includes(file.type)) {
-                feedback.textContent = 'Invalid file type. Please upload an image (JPG, PNG, or GIF).';
-                return;
-            }
+            // Update preview
+            profilePicPreview.src = imageDataUrl;
             
-            if (file.size > maxSize) {
-                feedback.textContent = 'File is too large. Please upload an image less than 5MB.';
-                return;
-            }
+            // Convert data URL to Blob
+            const blob = dataURLtoBlob(imageDataUrl);
             
-            feedback.textContent = '';
+            // Create a File from the Blob
+            const file = new File([blob], "webcam-capture.jpg", { 
+                type: "image/jpeg",
+                lastModified: Date.now()
+            });
+            
+            // Create a FileList-like object and add the file
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            
+            // Set the files property of the file input
+            profilePicInput.files = dataTransfer.files;
+            
+            // Validate the profile pic
+            validateProfilePic();
+            
+            // Stop webcam stream
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            
+            // Hide webcam container
+            webcamContainer.style.display = 'none';
+            
+            // Reset button text
+            captureButton.textContent = 'Capture from Webcam';
+        } catch (error) {
+            console.error("Error capturing photo:", error);
+            alert("Error capturing photo. Please try again.");
         }
+    });
+}
 
-        // Initialize webcam when DOM is loaded
-        initializeWebcam();
-    </script>
+// Helper function: Convert Data URL to Blob
+function dataURLtoBlob(dataURL) {
+    const parts = dataURL.split(';base64,');
+    const contentType = parts[0].split(':')[1];
+    const raw = window.atob(parts[1]);
+    const rawLength = raw.length;
+    const uInt8Array = new Uint8Array(rawLength);
+    
+    for (let i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+    }
+    
+    return new Blob([uInt8Array], { type: contentType });
+}
+
+// Initialize webcam when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeWebcam();
+});
+    
+    function setValid(input, feedback, message) {
+        input.classList.remove('invalid');
+        input.classList.add('valid');
+        feedback.textContent = message;
+        feedback.className = 'feedback valid';
+    }
+    
+    function setInvalid(input, feedback, message) {
+        input.classList.remove('valid');
+        input.classList.add('invalid');
+        feedback.textContent = message;
+        feedback.className = 'feedback invalid';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded');
+    initializeSignupForm();
+    initializeWebcam();
+});
+</script>
+
 </body>
 </html>
