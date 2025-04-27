@@ -73,6 +73,50 @@ function getTopProductImage($orderID, $db)
             margin-right: 10px;
         }
 
+        .modal-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .modal {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 400px;
+            border-radius: 5px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .modal-content {
+            margin: 15px 0;
+        }
+
+        .modal-footer {
+            text-align: right;
+        }
+
+        .modal-button {
+            padding: 8px 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .modal-confirm-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+
         .button-group {
             margin: 20px;
             display: flex;
@@ -114,16 +158,30 @@ function getTopProductImage($orderID, $db)
         }
 
         .animate {
-    animation: slideIn 0.3s ease-in-out;
-  }
+            animation: slideIn 0.3s ease-in-out;
+        }
 
-  @keyframes slideIn {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-12px); }
-    50% { transform: translateX(10px); }
-    75% { transform: translateX(-7px); }
-    100% { transform: translateX(0); }
-  }
+        @keyframes slideIn {
+            0% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-12px);
+            }
+
+            50% {
+                transform: translateX(10px);
+            }
+
+            75% {
+                transform: translateX(-7px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
 
@@ -149,15 +207,15 @@ function getTopProductImage($orderID, $db)
         </div>
     <?php else: ?>
         <?php foreach ($orders as $order): ?>
-            
+
             <?php $productImage = getTopProductImage($order['orderID'], $_db); ?>
             <div class="order-card">
-            <img src="<?= htmlspecialchars($productImage) ?>" alt="Product Image">
+                <img src="<?= htmlspecialchars($productImage) ?>" alt="Product Image">
                 <div class="order-info">
                     <p><strong>Order ID:</strong> <?= $order['orderID'] ?></p>
                     <p><strong>Total Price:</strong> RM<?= number_format($order['orderTotal'], 2) ?></p>
                     <p><strong>Date:</strong> <?= formatDate($order['orderDate']) ?></p>
-                    <p><strong>Item quantity:</strong> <?=$totalQuantity = getOrderTotalQuantity($order['orderID'], $_db);?></p>
+                    <p><strong>Item quantity:</strong> <?= $totalQuantity = getOrderTotalQuantity($order['orderID'], $_db); ?></p>
                 </div>
                 <div class="order-actions">
                     <?php if ($order['orderStatus'] === 'pending'): ?>
@@ -185,7 +243,7 @@ function getTopProductImage($orderID, $db)
                     <?php elseif ($order['orderStatus'] === 'sendOut'): ?>
                         <form method="post" action="completeOrder.php" style="display:inline;">
                             <input type="hidden" name="orderID" value="<?= $order['orderID'] ?>">
-                            <button type="submit">Order Receive</button>
+                            <button type="button" onclick="showDeleteConfirmation()">Order Receive</button>
                         </form>
                     <?php endif; ?>
 
@@ -193,10 +251,52 @@ function getTopProductImage($orderID, $db)
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
+    <div id="confirmation" class="modal-container">
+        <div class="modal">
+            <section>
+                <header class="modal-header">
+                    <h2>Are you sure you want to delete this?</h2>
+                </header>
+                <section class="modal-content">
+                    <p>This action cannot be undone</p>
+                </section>
+                <footer class="modal-footer">
+                    <button class="modal-button" onclick="hideDeleteConfirmation()">Cancel</button>
+                    <button class="modal-button modal-confirm-button" onclick="confirmDelete()">Confirm</button>
+                </footer>
+            </section>
+        </div>
+    </div>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('emptyCart').classList.add('animate');
         });
+
+        let deleteForm = null;
+
+        function showDeleteConfirmation() {
+            deleteForm = event.target.closest('form');
+            document.getElementById('confirmation').style.display = 'block';
+        }
+
+        function hideDeleteConfirmation() {
+            document.getElementById('confirmation').style.display = 'none';
+            deleteForm = null;
+        }
+
+        function confirmDelete() {
+            if (deleteForm) {
+                deleteForm.submit();
+            }
+            hideDeleteConfirmation();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmation');
+            if (event.target === modal) {
+                hideDeleteConfirmation();
+            }
+        }
     </script>
 </body>
 
