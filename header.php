@@ -148,7 +148,7 @@ if (isset($_SESSION['user_id'])) {
                     <div class="dropdown-content">
                         <a href="/view_profile.php">View Profile</a>
 
-                        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin' || $_SESSION['user_role'] === 'staff' ): ?>
                             <a href="/dashboard.php">Dashboard</a>
                         <?php endif; ?>
 
@@ -169,19 +169,44 @@ if (isset($_SESSION['user_id'])) {
     <div class="popup-content">
         <span class="close" onclick="closeLoginPopup()">&times;</span>
         <h2>Login</h2>
-        <form action="login_process.php" method="POST">
-            <div id="loginError" class="error-message" style="display: none;"></div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'Customer')">Customer</button>
+            <button class="tablinks" onclick="openTab(event, 'Admin')">Admin/Staff</button>
+        </div>
 
-            <label for="username">Username/Email:</label>
-            <input type="text" id="username" name="username" value="admin" required>
+        <!-- Customer Login Form -->
+        <div id="Customer" class="tabcontent">
+            <form action="login_process.php" method="POST">
+                <div id="loginError" class="error-message" style="display: none; color: red;"></div>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" value="admin" required>
+                <label for="customer_username">Username/Email:</label>
+                <input type="text" id="customer_username" name="username" required>
 
-            <a href="signup.php" style="display:block; margin-top:10px; margin-bottom:10px">New User? Sign Up Here!</a>
+                <label for="customer_password">Password:</label>
+                <input type="password" id="customer_password" name="password" required>
 
-            <button type="submit">Login</button>
-        </form>
+                <button type="submit" name="role" value="customer">Login as Customer</button>
+                <a href="signup.php" style="display:block; margin-top:10px; margin-bottom:10px">New User? Sign Up Here!</a>
+                <a href="forgotPassword.php" style="display:block; margin-top:10px; margin-bottom:10px">forgot password?</a>
+            </form>
+        </div>
+
+        <!-- Admin/Staff Login Form -->
+        <div id="Admin" class="tabcontent" style="display:none;">
+            <form action="login_process.php" method="POST">
+                <div id="adminError" class="error-message" style="display: none; color: red;"></div>
+
+                <label for="admin_username">Username:</label>
+                <input type="text" id="admin_username" name="username" required>
+
+                <label for="admin_password">Password:</label>
+                <input type="password" id="admin_password" name="password" required>
+
+                <button type="submit" name="role" value="admin">Login as Admin/Staff</button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -236,17 +261,36 @@ if (isset($_SESSION['user_id'])) {
     }
 
     function showLoginError(message) {
-        const errorElement = document.getElementById('loginError');
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
+    const errorElement = document.getElementById('loginError');
+    if (errorElement) {
+        errorElement.innerHTML = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+function openTab(evt, tabName) {
+        // Hide all tab content
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
         }
+
+        // Remove the active class from all tab links
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+
+        // Show the current tab and add an "active" class to the button that opened the tab
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
     }
 
     // Check for messages when page loads
     window.onload = function () {
         <?php if (isset($_SESSION['login_error'])): ?>
-            showLoginError("<?php echo addslashes($_SESSION['login_error']); ?>");
+            showLoginError(<?php echo json_encode($_SESSION['login_error']); ?>);
             openLoginPopup();
             <?php unset($_SESSION['login_error']); ?>
         <?php endif; ?>

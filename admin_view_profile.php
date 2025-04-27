@@ -184,7 +184,7 @@ if (!isset($_SESSION['user_profile_pic']) || $_SESSION['user_profile_pic'] !== $
             
             <div class="profile-actions">
     <a href="admin_edit_profile.php" class="btn btn-primary">Edit Profile</a>
-    <a href="admin_dashboard.php" class="btn btn-dashboard">Back to Dashboard</a>
+    <a href="dashboard.php" class="btn btn-dashboard">Back to Dashboard</a>
 </div>
         </div>
     </div>

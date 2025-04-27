@@ -197,7 +197,41 @@ function table_headers($fields, $sort, $dir, $href = '', $sortable = []) {
     }
 }
 
-function get_mail() {
+// ============================================================================
+// Global Constants and Variables
+// ============================================================================
+
+// ============================================================================
+// Email Functions
+// ============================================================================
+
+// Demo Accounts:
+// --------------
+// AACS3173@gmail.com           npsg gzfd pnio aylm
+// BAIT2173.email@gmail.com     ytwo bbon lrvw wclr
+// liaw.casual@gmail.com        wtpa kjxr dfcb xkhg
+// liawcv1@gmail.com            obyj shnv prpa kzvj
+
+//function get_mail() {
+//    require_once 'lib/PHPMailer.php';
+ //   require_once 'lib/SMTP.php';
+
+ //   $m = new PHPMailer(true);
+  //  $m->isSMTP();
+ //   $m->SMTPAuth = true;
+  //  $m->Host = 'smtp.gmail.com';
+ //   $m->Port = 587;
+ //   $m->Username = 'liawcv1@gmail.com';
+ //   $m->Password = 'pztq znli gpjg tooe';
+ //   $m->CharSet = 'utf-8';
+  //  $m->setFrom($m->Username, '😺 Admin');
+
+ //   return $m;
+//}
+
+// Initialize and return mail object
+function get_mail()
+{
     require_once 'lib/PHPMailer.php';
     require_once 'lib/SMTP.php';
 
@@ -206,12 +240,30 @@ function get_mail() {
     $m->SMTPAuth = true;
     $m->Host = 'smtp.gmail.com';
     $m->Port = 587;
-    $m->Username = 'liawcv1@gmail.com';
-    $m->Password = 'pztq znli gpjg tooe';
+    $m->Username = 'ooimh-pm22@student.tarc.edu.my';
+    $m->Password = 'nygz rdua ztno fkiq';
     $m->CharSet = 'utf-8';
-    $m->setFrom($m->Username, '😺 Admin');
+    $m->setFrom($m->Username, '😺 PopZone');
 
     return $m;
+}
+
+function verification_email($email, $activation_token_hash)
+{
+    $mail = get_mail();
+    $mail->addAddress($email);
+    $mail->isHTML(true);
+
+    $verification_link = "http://localhost:8000/verify.php?token=$activation_token_hash";
+
+    $mail->Subject = 'noreply';
+    $mail->Body = "<b>Hello</b>,<br><br>
+                    Thank you for registering with us. Please click on the <a href='$verification_link'>link</a> to verify your account.
+                    <br>Thank You.";
+
+    if (!$mail->send()) {
+        echo "Error sending email.";
+    }
 }
 
 
@@ -222,5 +274,12 @@ function getOrderTotalQuantity($orderID, $db)
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
     return $result ? (int)$result['totalQuantity'] : 0;
+}
+
+function redirect($url = null)
+{
+    $url ??= $_SERVER['REQUEST_URI'];
+    header("Location: $url");
+    exit();
 }
 ?>

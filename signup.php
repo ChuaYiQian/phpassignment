@@ -129,11 +129,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         $userID = generateUserID($conn, 'C'); // Generate customer ID starting with "C"
 
-        // Prepare and execute insert statement
-        $stmt = $conn->prepare("INSERT INTO user (userID, userName, userGender, userEmail, userPhoneNum, userPassword, userAddress, userProfilePicture, userStatus, userRole, userAge) 
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', 'customer', ?)");
-        $stmt->bind_param("ssssssssi", $userID, $name, $gender, $email, $phone, $hashed_password, $address, $profile_pic, $age);
+        $activation_token = sha1(uniqid() . rand());
+
+        $stmt = $conn->prepare('INSERT INTO user (userID, userName, userGender, userEmail, userPhoneNum, userPassword, userAddress, userProfilePicture, userStatus, userRole, userAge, accountactivationtoken, tokenexpiresat, verifystatus) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         
+// Bind all parameters including the hardcoded ones
+$status = "active";
+$role = "customer";
+$tokenExpiresAt = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+$verifyStatus = "unverified"; // or whatever your default status should be
+
+$stmt->bind_param("ssssssssssisss", 
+$userID, 
+$name, 
+$gender, 
+$email, 
+$phone, 
+$hashed_password, 
+$address, 
+$profile_pic, 
+$status, 
+$role, 
+$age, 
+$activation_token, 
+$tokenExpiresAt,
+$verifyStatus);
         if ($stmt->execute()) {
             $success = true;
             
@@ -143,6 +164,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt = $conn->prepare("INSERT INTO cart (cartID, userID, createDate, updateDate) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("ssss", $cartID, $userID, $current_date, $current_date);
             $stmt->execute();
+
+            temp('info', 'Record inserted');
+            verification_email($email, $activation_token);
+            redirect('emailAuthenticate.php?userid=' . $userID . '&status=check');
         } else {
             $errors[] = "Registration failed. Please try again.";
         }
@@ -489,14 +514,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 setValid(input, feedback, 'Valid selection.');
             }
             break;
+        case 'password':
+            if (value === '') {
+                setInvalid(input, feedback, 'Password cannot be empty.');
+            } else if (value.length < 8) {
+                setInvalid(input, feedback, 'Password must be at least 8 characters.');
+            } else {
+                setValid(input, feedback, 'Valid password.');
+                // Also validate confirm password when password changes
+                if (document.getElementById('confirm_password').value !== '') {
+                    validateField('confirm_password');
+                }
+            }
+            break;
+        case 'confirm_password':
+            const password = document.getElementById('password').value;
+            if (value === '') {
+                setInvalid(input, feedback, 'Please confirm your password.');
+            } else if (value !== password) {
+                setInvalid(input, feedback, 'Passwords do not match.');
+            } else {
+                setValid(input, feedback, 'Passwords match.');
+            }
+            break;
         default:
             if (value === '') {
-                // Custom message for confirm_password field
-                if (field === 'confirm_password') {
-                    setInvalid(input, feedback, 'Confirm password cannot be empty.');
-                } else {
-                    setInvalid(input, feedback, `${field.charAt(0).toUpperCase() + field.slice(1)} cannot be empty.`);
-                }
+                setInvalid(input, feedback, `${field.charAt(0).toUpperCase() + field.slice(1)} cannot be empty.`);
             } else {
                 setValid(input, feedback, '');
             }
@@ -766,6 +809,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeSignupForm();
     initializeWebcam();
 });
+
+
 </script>
 
 </body>

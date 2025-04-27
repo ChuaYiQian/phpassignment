@@ -1,6 +1,38 @@
 <?php
 session_start();
+
 require_once 'base.php';
+
+// Handle AJAX validation requests
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['validate'])) {
+    header('Content-Type: application/json');
+    
+    $field = isset($_POST['username']) ? 'userName' : (isset($_POST['email']) ? 'userEmail' : null);
+    $value = $_POST[$field === 'userName' ? 'username' : 'email'] ?? null;
+    $current_id = $_POST['current_id'] ?? null;
+    
+    if (!$field || !$value) {
+        echo json_encode(['error' => 'Invalid request']);
+        exit;
+    }
+
+    try {
+        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM user WHERE $field = ? AND userID != ?");
+        $stmt->bind_param("ss", $value, $current_id);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        
+        if ($result['count'] > 0) {
+            echo json_encode(['status' => 'duplicate']);
+        } else {
+            echo json_encode(['status' => 'available']);
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+        echo json_encode(['error' => 'Database error occurred']);
+    }
+    exit;
+}
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
     header("Location: ../dashboard.php");
     temp('error', 'Admins are not allowed to access this page.');
@@ -214,6 +246,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .form-actions {
             margin-top: 20px;
         }
+
+        .feedback {
+    font-size: 12px;
+    padding: 5px 0;
+    transition: all 0.3s ease;
+}
+.feedback.valid {
+    color: green;
+}
+.feedback.invalid {
+    color: red;
+}
+input.valid, textarea.valid, select.valid {
+    border: 1px solid green;
+}
+input.invalid, textarea.invalid, select.invalid {
+    border: 1px solid red;
+}
     </style>
     <script>
         function previewImage(event) {
@@ -256,11 +306,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="form-group">
                     <label for="name">Full Name:</label>
                     <input type="text" id="name" name="name" value="<?= htmlspecialchars($user['userName']) ?>" required>
+                    <span id="nameFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" value="<?= htmlspecialchars($user['userEmail']) ?>" required>
+                    <span id="emailFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
@@ -269,21 +321,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <option value="M" <?= $user['userGender'] == 'M' ? 'selected' : '' ?>>Male</option>
                         <option value="F" <?= $user['userGender'] == 'F' ? 'selected' : '' ?>>Female</option>
                     </select>
+                    <span id="genderFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="phone">Phone Number:</label>
                     <input type="tel" id="phone" name="phone" value="<?= htmlspecialchars($user['userPhoneNum']) ?>" required>
+                    <span id="phoneFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="address">Address:</label>
                     <textarea id="address" name="address" rows="3" required><?= htmlspecialchars($user['userAddress']) ?></textarea>
+                    <span id="addressFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-group">
                     <label for="age">Age:</label>
                     <input type="number" id="age" name="age" min="13" value="<?= htmlspecialchars($user['userAge']) ?>" required>
+                    <span id="ageFeedback" class="feedback"></span>
                 </div>
                 
                 <div class="form-actions">
@@ -296,4 +352,212 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     <?php include 'footer.php'; ?>
 </body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEditForm();
+});
+
+function initializeEditForm() {
+    const fields = ['name', 'email', 'gender', 'phone', 'address', 'age'];
+
+    fields.forEach(field => {
+        const input = document.getElementById(field);
+        if (input) {
+            input.addEventListener('input', () => validateField(field));
+            input.addEventListener('blur', () => validateField(field));
+        }
+    });
+
+    document.querySelector('form').addEventListener('submit', function(event) {
+        let hasErrors = false;
+        
+        fields.forEach(field => {
+            validateField(field);
+            const input = document.getElementById(field);
+            if (input && input.classList.contains('invalid')) {
+                hasErrors = true;
+            }
+        });
+
+        if (hasErrors) {
+            event.preventDefault();
+            alert('Please correct the errors before submitting.');
+        }
+    });
+}
+
+function validateField(field) {
+    const input = document.getElementById(field);
+    const feedback = document.getElementById(`${field}Feedback`);
+
+    if (!input || !feedback) return;
+
+    const value = input.value.trim();
+
+    switch (field) {
+        case 'name':
+            if (value === '') {
+                setInvalid(input, feedback, 'Name cannot be empty.');
+            } else {
+                checkDuplicate('name', 'username');
+            }
+            break;
+        case 'email':
+            if (value === '') {
+                setInvalid(input, feedback, 'Email cannot be empty.');
+            } else if (!isValidEmail(value)) {
+                setInvalid(input, feedback, 'Please enter a valid email address.');
+            } else {
+                checkDuplicate('email', 'email');
+            }
+            break;
+        case 'phone':
+            validatePhone();
+            break;
+        case 'address':
+            if (value === '') {
+                setInvalid(input, feedback, 'Address cannot be empty.');
+            } else {
+                setValid(input, feedback, 'Valid address.');
+            }
+            break;
+        case 'age':
+            validateAge();
+            break;
+        case 'gender':
+            if (value === '') {
+                setInvalid(input, feedback, 'Please select a gender.');
+            } else {
+                setValid(input, feedback, 'Valid selection.');
+            }
+            break;
+        default:
+            if (value === '') {
+                setInvalid(input, feedback, `${field.charAt(0).toUpperCase() + field.slice(1)} cannot be empty.`);
+            } else {
+                setValid(input, feedback, '');
+            }
+    }
+}
+
+// Add this new function for duplicate checking
+function checkDuplicate(fieldId, fieldType) {
+    const field = document.getElementById(fieldId);
+    const feedback = document.getElementById(`${fieldId}Feedback`);
+    const fieldValue = field.value.trim();
+
+    if (fieldValue === "") {
+        setInvalid(field, feedback, 'This field cannot be empty.');
+        return;
+    }
+
+    if (fieldType === 'email' && !isValidEmail(fieldValue)) {
+        setInvalid(field, feedback, 'Invalid email format.');
+        return;
+    }
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "edit_profile.php", true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var response = JSON.parse(xhr.responseText);
+
+                    if (response.status === 'duplicate') {
+                        setInvalid(field, feedback, `${fieldType.charAt(0).toUpperCase() + fieldType.slice(1)} already exists.`);
+                    } else if (response.status === 'available') {
+                        setValid(field, feedback, `${fieldType.charAt(0).toUpperCase() + fieldType.slice(1)} is available.`);
+                    } else if (response.error) {
+                        setInvalid(field, feedback, response.error);
+                    }
+                } catch (e) {
+                    console.error("Error parsing JSON response:", e);
+                    setInvalid(field, feedback, 'Unexpected response from server.');
+                }
+            } else {
+                console.error("Error: Could not contact the server.");
+                setInvalid(field, feedback, 'Unable to verify availability.');
+            }
+        }
+    };
+
+    xhr.send(`validate=true&${fieldType}=${encodeURIComponent(fieldValue)}&current_id=<?= $user_id ?>`);
+}
+
+
+function validatePhone() {
+    var phone = document.getElementById("phone").value.trim();
+    var phoneFeedback = document.getElementById("phoneFeedback");
+
+    var phoneRegex = /^\+?[0-9]{10,14}$/;
+
+    if (phone === "") {
+        setInvalid(document.getElementById("phone"), phoneFeedback, 'Phone number cannot be empty.');
+    } else if (!phoneRegex.test(phone)) {
+        setInvalid(document.getElementById("phone"), phoneFeedback, 'Invalid phone number format. Please enter 10-14 digits.');
+    } else {
+        setValid(document.getElementById("phone"), phoneFeedback, 'Valid phone number.');
+    }
+}
+
+function validateAge() {
+    var age = document.getElementById("age").value.trim();
+    var ageFeedback = document.getElementById("ageFeedback");
+
+    if (age === "") {
+        setInvalid(document.getElementById("age"), ageFeedback, 'Age cannot be empty.');
+    } else if (isNaN(age) || parseInt(age) < 13) {
+        setInvalid(document.getElementById("age"), ageFeedback, 'You must be at least 13 years old.');
+    } else {
+        setValid(document.getElementById("age"), ageFeedback, 'Valid age.');
+    }
+}
+
+function isValidEmail(email) {
+    var re = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+    return re.test(email);
+}
+
+function checkEmailAvailability(email) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "edit_profile.php", true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                var response = JSON.parse(xhr.responseText);
+                var emailInput = document.getElementById("email");
+                var feedback = document.getElementById("emailFeedback");
+
+                if (response.status === 'duplicate') {
+                    setInvalid(emailInput, feedback, 'Email already in use by another account.');
+                } else if (response.status === 'available') {
+                    setValid(emailInput, feedback, 'Email is available.');
+                }
+            } catch (e) {
+                console.error("Error parsing response:", e);
+            }
+        }
+    };
+    xhr.send(`validate_email=true&email=${encodeURIComponent(email)}&current_id=<?= $user_id ?>`);
+}
+
+function setValid(input, feedback, message) {
+    input.classList.remove('invalid');
+    input.classList.add('valid');
+    feedback.textContent = message;
+    feedback.className = 'feedback valid';
+}
+
+function setInvalid(input, feedback, message) {
+    input.classList.remove('valid');
+    input.classList.add('invalid');
+    feedback.textContent = message;
+    feedback.className = 'feedback invalid';
+}
+</script>
 </html>

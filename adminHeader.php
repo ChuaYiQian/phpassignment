@@ -154,40 +154,96 @@ if (!isset($_SESSION['user_profile_pic'])) {
         .logout-btn:hover {
             background-color: #f1f1f1;
         }
+
+        /* Popup Styles */
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 300px; /* Set a width for the popup */
+    display: none; /* Initially hidden */
+}
+
+.popup-content {
+    padding: 20px;
+    text-align: center;
+}
+
+.popup-content h2 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.popup-content p {
+    margin-bottom: 20px;
+    color: #666;
+}
+
+.popup-content .close {
+    cursor: pointer;
+    font-size: 18px;
+    color: #999;
+}
+
+.popup-content .close:hover {
+    color: #333; /* Change color on hover */
+}
+
+.popup-content button {
+    background-color: #1abc9c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.popup-content button:hover {
+    background-color: #16a085; /* Darker shade on hover */
+}
     </style>
 </head>
 
 <body>
-    <div class="sidebar">
-        <h2><?php echo "Welcome, " . htmlspecialchars($_SESSION['user_name']); ?></h2>
-        <div class="side-btn">
-            <a href="/home.php">Home</a>
-        </div>
-        <div class="side-btn">
-            <a href="/dashboard.php">Dashboard</a>
-        </div>
-        <div class="side-btn">
-            <a href="/product/productMaintenance.php">Products</a>
-        </div>
-        <div class="side-btn">
-            <a href="/category/categoryMaintenance.php">Category</a>
-        </div>
-        <div class="side-btn">
-            <a href="/order/maintenanceOrder.php">Orders</a>
-        </div>
+<div class="sidebar">
+    <h2><?php echo "Welcome, " . htmlspecialchars($_SESSION['user_name']); ?></h2>
+    <div class="side-btn">
+        <a href="/home.php">Home</a>
+    </div>
+    <div class="side-btn">
+        <a href="/dashboard.php">Dashboard</a>
+    </div>
+    <div class="side-btn">
+        <a href="/product/productMaintenance.php">Products</a>
+    </div>
+    <div class="side-btn">
+        <a href="/category/categoryMaintenance.php">Category</a>
+    </div>
+    <div class="side-btn">
+        <a href="/order/maintenanceOrder.php">Orders</a>
+    </div>
+    
+    <?php if ($_SESSION['user_role'] === 'admin'): // Check if the user is an admin ?>
         <div class="side-btn">
             <a href="/admin_dashboard.php">Users</a>
         </div>
-        <div class="side-btn">
-            <a href="/voucher_table.php">Voucher</a>
-        </div>
-        <div class="side-btn">
-            <a href="/payment_table.php">Payment Methods</a>
-        </div>
-        <div class="side-btn">
-            <a href="/transaction_table.php">Transaction</a>
-        </div>
+    <?php endif; ?>
+
+    <div class="side-btn">
+        <a href="/voucher_table.php">Voucher</a>
     </div>
+    <div class="side-btn">
+        <a href="/payment_table.php">Payment Methods</a>
+    </div>
+    <div class="side-btn">
+        <a href="/transaction_table.php">Transaction</a>
+    </div>
+</div>
     <div class="adminheader">
         <h1>Admin Panel</h1>
         <div class="profile-dropdown">
@@ -202,4 +258,31 @@ if (!isset($_SESSION['user_profile_pic'])) {
             </div>
         </div>
     </div>
+
+      
     <div class="main-content">
+
+    <!-- Login Successful Popup -->
+    <div id="successPopup" class="popup" style="display:none; z-index:100;">
+        <div class="popup-content">
+            <span class="close" onclick="closeSuccessPopup()">&times;</span>
+            <h2>Login Successful!</h2>
+            <p>You are now logged in.</p>
+            <button onclick="closeSuccessPopup()">Continue</button>
+        </div>
+    </div>
+    <script> function openSuccessPopup() {
+            document.getElementById("successPopup").style.display = "block"; // Show the success popup
+        }
+
+        function closeSuccessPopup() {
+            document.getElementById("successPopup").style.display = "none"; // Hide the success popup
+        }
+
+        // Check for messages when page loads
+        window.onload = function () {
+            <?php if (isset($_SESSION['login_success'])): ?>
+                openSuccessPopup(); // Call to open the success popup
+                <?php unset($_SESSION['login_success']); ?>
+            <?php endif; ?>
+        };</script>

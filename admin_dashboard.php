@@ -45,15 +45,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id']) && isset($_
 }
 
 // Get all users
-$users = [];
-$result = $conn->query("SELECT * FROM user ORDER BY 
-    CASE userRole 
-        WHEN 'admin' THEN 1 
-        WHEN 'staff' THEN 2 
-        WHEN 'customer' THEN 3 
-        ELSE 4 
-    END, userID");
-if ($result) {
+$query = "SELECT * FROM user";
+if (isset($_GET['search']) && !empty($_GET['search']) && isset($_GET['tab']) && $_GET['tab'] == 'all-users') {
+    $search = '%' . $conn->real_escape_string($_GET['search']) . '%';
+    $query .= " WHERE (userName LIKE ? OR userEmail LIKE ?)";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ss", $search, $search);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $users = $result->fetch_all(MYSQLI_ASSOC);
+} else {
+    $query .= " ORDER BY 
+        CASE userRole 
+            WHEN 'admin' THEN 1 
+            WHEN 'staff' THEN 2 
+            WHEN 'customer' THEN 3 
+            ELSE 4 
+        END, userID";
+    $result = $conn->query($query);
     $users = $result->fetch_all(MYSQLI_ASSOC);
 }
 ?>
@@ -143,6 +152,15 @@ if ($result) {
 
     <div id="all-users" class="tab-content active">
         <h2>All Users</h2>
+        <form method="GET" action="" style="margin-bottom: 20px;">
+    <input type="text" name="search" placeholder="Search by name or email" 
+           value="<?= (isset($_GET['search']) && isset($_GET['tab']) && $_GET['tab'] == 'all-users') ? htmlspecialchars($_GET['search']) : '' ?>">
+    <input type="hidden" name="tab" value="all-users">
+    <button type="submit" class="btn btn-primary">Search</button>
+    <?php if (isset($_GET['search']) && isset($_GET['tab']) && $_GET['tab'] == 'all-users'): ?>
+        <a href="admin_dashboard.php" class="btn btn-danger">Clear</a>
+    <?php endif; ?>
+</form>
         <table>
             <thead>
                 <tr>
@@ -151,6 +169,7 @@ if ($result) {
                     <th>Email</th>
                     <th>Role</th>
                     <th>Status</th>
+                    <th>Verification</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -163,6 +182,9 @@ if ($result) {
                     <td><?= htmlspecialchars($user['userRole']) ?></td>
                     <td class="status-<?= htmlspecialchars($user['userStatus']) ?>">
                         <?= htmlspecialchars(ucfirst($user['userStatus'])) ?>
+                    </td>
+                    <td class="status-<?= htmlspecialchars($user['verifystatus']) ?>">
+                        <?= htmlspecialchars(ucfirst($user['verifystatus'])) ?>
                     </td>
                     <td class="action-btns">
     <a href="edit_user.php?id=<?= $user['userID'] ?>" class="btn btn-edit">Edit</a>
@@ -182,8 +204,7 @@ if ($result) {
             </form>
         <?php endif; ?>
         
-        <a href="delete_user.php?id=<?= $user['userID'] ?>" class="btn btn-danger" onclick="return confirm('Delete this user?')">Delete</a>
-    <?php endif; ?>
+        <a href="delete_user.php?id=<?= $user['userID'] ?>" class="btn btn-danger disabled" onclick="return false" style="pointer-events: none; opacity: 0.65;">Delete</a>    <?php endif; ?>
 </td>
                 </tr>
                 <?php endforeach; ?>
@@ -193,6 +214,15 @@ if ($result) {
 
     <div id="customers" class="tab-content">
         <h2>Customers</h2>
+        <form method="GET" action="" style="margin-bottom: 20px;">
+    <input type="text" name="search" placeholder="Search by name or email" 
+           value="<?= (isset($_GET['search']) && isset($_GET['tab']) && $_GET['tab'] == 'customers') ? htmlspecialchars($_GET['search']) : '' ?>">
+    <input type="hidden" name="tab" value="customers">
+    <button type="submit" class="btn btn-primary">Search</button>
+    <?php if (isset($_GET['search']) && isset($_GET['tab']) && $_GET['tab'] == 'customers'): ?>
+        <a href="admin_dashboard.php" class="btn btn-danger">Clear</a>
+    <?php endif; ?>
+</form>
         <table>
             <thead>
                 <tr>
@@ -204,44 +234,61 @@ if ($result) {
                 </tr>
             </thead>
             <tbody>
-                <?php 
-                $customers = $conn->query("SELECT * FROM user WHERE userRole = 'customer' ORDER BY userID");
-                while($customer = $customers->fetch_assoc()):
-                ?>
-                <tr>
-                    <td><?= htmlspecialchars($customer['userID']) ?></td>
-                    <td><?= htmlspecialchars($customer['userName']) ?></td>
-                    <td><?= htmlspecialchars($customer['userEmail']) ?></td>
-                    <td class="status-<?= htmlspecialchars($customer['userStatus']) ?>">
-                        <?= htmlspecialchars(ucfirst($customer['userStatus'])) ?>
-                    </td>
-                    <td class="action-btns">
-                        <a href="edit_user.php?id=<?= $customer['userID'] ?>" class="btn btn-edit">Edit</a>
-                        
-                        <?php if ($customer['userStatus'] == 'active'): ?>
-                            <form method="POST" onsubmit="return confirm('Block this customer? They will not be able to login.')">
-                                <input type="hidden" name="user_id" value="<?= $customer['userID'] ?>">
-                                <input type="hidden" name="action" value="block">
-                                <button type="submit" class="btn btn-block">Block</button>
-                            </form>
-                        <?php else: ?>
-                            <form method="POST" onsubmit="return confirm('Unblock this customer? They will be able to login again.')">
-                                <input type="hidden" name="user_id" value="<?= $customer['userID'] ?>">
-                                <input type="hidden" name="action" value="unblock">
-                                <button type="submit" class="btn btn-unblock">Unblock</button>
-                            </form>
-                        <?php endif; ?>
-                        
-                        <a href="delete_user.php?id=<?= $customer['userID'] ?>" class="btn btn-danger" onclick="return confirm('Are you sure you want to permanently delete this customer?')">Delete</a>
-                    </td>
-                </tr>
-                <?php endwhile; ?>
-            </tbody>
+            <?php 
+$customers = $conn->query("SELECT * FROM user WHERE userRole = 'customer' ORDER BY userID");
+if ($customers && $customers->num_rows > 0):
+    while($customer = $customers->fetch_assoc()):
+?>
+<tr>
+    <td><?= htmlspecialchars($customer['userID']) ?></td>
+    <td><?= htmlspecialchars($customer['userName']) ?></td>
+    <td><?= htmlspecialchars($customer['userEmail']) ?></td>
+    <td class="status-<?= htmlspecialchars($customer['userStatus']) ?>">
+        <?= htmlspecialchars(ucfirst($customer['userStatus'])) ?>
+    </td>
+    <td class="action-btns">
+        <a href="edit_user.php?id=<?= $customer['userID'] ?>" class="btn btn-edit">Edit</a>
+        
+        <?php if ($customer['userStatus'] == 'active'): ?>
+            <form method="POST" onsubmit="return confirm('Block this customer? They will not be able to login.')">
+                <input type="hidden" name="user_id" value="<?= $customer['userID'] ?>">
+                <input type="hidden" name="action" value="block">
+                <button type="submit" class="btn btn-block">Block</button>
+            </form>
+        <?php else: ?>
+            <form method="POST" onsubmit="return confirm('Unblock this customer? They will be able to login again.')">
+                <input type="hidden" name="user_id" value="<?= $customer['userID'] ?>">
+                <input type="hidden" name="action" value="unblock">
+                <button type="submit" class="btn btn-unblock">Unblock</button>
+            </form>
+        <?php endif; ?>
+        
+        <a href="delete_user.php?id=<?= $customer['userID'] ?>" class="btn btn-danger disabled" onclick="return false" style="pointer-events: none; opacity: 0.65;">Delete</a>
+    </td>
+</tr>
+<?php 
+    endwhile;
+else:
+?>
+<tr>
+    <td colspan="5" style="text-align: center;">No customers found</td>
+</tr>
+<?php endif; ?>
+</tbody>
         </table>
     </div>
 
-    <div id="staff" class="tab-content">
+<div id="staff" class="tab-content">
         <h2>Staff</h2>
+        <form method="GET" action="" style="margin-bottom: 20px;">
+            <input type="text" name="search" placeholder="Search by name or email" 
+                   value="<?= (isset($_GET['search']) && isset($_GET['tab']) && $_GET['tab'] == 'staff') ? htmlspecialchars($_GET['search']) : '' ?>">
+            <input type="hidden" name="tab" value="staff">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <?php if (isset($_GET['search']) && isset($_GET['tab']) && $_GET['tab'] == 'staff'): ?>
+                <a href="admin_dashboard.php" class="btn btn-danger">Clear</a>
+            <?php endif; ?>
+        </form>
         <table>
             <thead>
                 <tr>
@@ -255,7 +302,8 @@ if ($result) {
             <tbody>
                 <?php 
                 $staff = $conn->query("SELECT * FROM user WHERE userRole = 'staff' ORDER BY userID");
-                while($staff_member = $staff->fetch_assoc()):
+                if ($staff && $staff->num_rows > 0):
+                    while($staff_member = $staff->fetch_assoc()):
                 ?>
                 <tr>
                     <td><?= htmlspecialchars($staff_member['userID']) ?></td>
@@ -282,30 +330,52 @@ if ($result) {
                                 </form>
                             <?php endif; ?>
                             
-                            <a href="delete_user.php?id=<?= $staff_member['userID'] ?>" class="btn btn-danger" onclick="return confirm('Are you sure you want to permanently delete this staff member?')">Delete</a>
+                            <a href="delete_user.php?id=<?= $staff_member['userID'] ?>" class="btn btn-danger disabled" onclick="return false" style="pointer-events: none; opacity: 0.65;">Delete</a>
                         <?php endif; ?>
                     </td>
                 </tr>
-                <?php endwhile; ?>
+                <?php 
+                    endwhile;
+                else:
+                ?>
+                <tr>
+                    <td colspan="5" style="text-align: center;">No staff members found</td>
+                </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 
     <script>
-        function openTab(evt, tabName) {
-            const tabContents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove("active");
-            }
+       function openTab(evt, tabName) {
+    const tabContents = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove("active");
+    }
 
-            const tabs = document.getElementsByClassName("tab");
-            for (let i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove("active");
-            }
+    const tabs = document.getElementsByClassName("tab");
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove("active");
+    }
 
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+    
+    // Update hidden tab field in all search forms
+    document.querySelectorAll('input[name="tab"]').forEach(input => {
+        input.value = tabName;
+    });
+}
+
+// Initialize tab state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const currentTab = "<?= isset($_GET['tab']) ? $_GET['tab'] : 'all-users' ?>";
+    if (currentTab) {
+        document.querySelectorAll('input[name="tab"]').forEach(input => {
+            input.value = currentTab;
+        });
+    }
+});
     </script>
 </body>
 </html>
