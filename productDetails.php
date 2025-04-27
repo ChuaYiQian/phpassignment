@@ -2,13 +2,6 @@
 include 'base.php';
 include 'header.php';
 
-
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
-    header("Location: ../dashboard.php");
-    temp('error', 'Admins are not allowed to access this page.');
-    exit();
-}
-
 $id = $_GET['id'] ?? null;
 if (!$id) {
     echo "<p>Invalid product ID.</p>";
