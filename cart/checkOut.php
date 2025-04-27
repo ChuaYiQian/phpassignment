@@ -61,8 +61,8 @@ try {
         
         $reviewStmt = $_db->prepare("
             INSERT INTO Review 
-            (reviewID, reviewDescription, starQuantity, reviewDate)
-            VALUES (?, '', 0, CURDATE())
+            (reviewID, reviewDescription, starQuantity, reviewDate, reviewImage)
+            VALUES (?, '', 0, CURDATE(),NULL)
         ");
         $reviewStmt->execute([$reviewID]);
 
