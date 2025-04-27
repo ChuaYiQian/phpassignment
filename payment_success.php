@@ -105,7 +105,6 @@ $body = "
     <h2 style='color: #4CAF50;'>Thank you for your payment!</h2>
     <p>Your payment for Order <strong>#$orderID</strong> has been received successfully.</p>
     <h3>Payment Receipt</h3>
-    <p><strong>Transaction Date:</strong> " . htmlspecialchars($transactionDate) . "</p>
     <table style='border-collapse: collapse; width: 100%; max-width: 600px;'>
         <tr style='background-color: #f2f2f2;'>
             <th style='border: 1px solid #ddd; padding: 8px;'>Item</th>
@@ -132,6 +131,7 @@ $body = "
             <td style='border: 1px solid #ddd; padding: 8px;'>RM " . number_format($paymentTotal * $taxRate, 2) . "</td>
         </tr>
     </table>
+    <p><strong>Transaction Date:</strong> " . htmlspecialchars($transactionDate) . "</p>
     <br>
     <h3>Shipping Address</h3>
     <p>" . htmlspecialchars($userAddress ?? 'No address available') . "</p>
