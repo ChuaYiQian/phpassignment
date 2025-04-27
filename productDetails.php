@@ -2,13 +2,6 @@
 include 'base.php';
 include 'header.php';
 
-
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
-    header("Location: ../dashboard.php");
-    temp('error', 'Admins are not allowed to access this page.');
-    exit();
-}
-
 $id = $_GET['id'] ?? null;
 if (!$id) {
     echo "<p>Invalid product ID.</p>";
@@ -107,15 +100,18 @@ foreach ($reviews as $review) {
                 <h1 class="product-title"><?= htmlspecialchars($product->productName) ?></h1>
                 <p class="detail-price">RM<?= number_format($product->productPrice, 2) ?></p>
                 <p class="detail-description"><?= htmlspecialchars($product->productDescription) ?></p>
-                <form action="/cartItem/addCartItem.php" method="post">
-                    <label for="newQuantity">Quantity:</label>
-                    <input type="number" name="newQuantity" id="newQuantity" value="1" min="1"max="<?= $product->productQuantity ?>">
-                    <input type="hidden" name="productID" value="<?= $product->productID ?>">
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
-                    <?php endif; ?>
-                    <button class="buy-button">Add To Cart</button>
-                </form>
+                <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin'): ?>
+                    <form action="/cartItem/addCartItem.php" method="post">
+                        <label for="newQuantity">Quantity:</label>
+                        <input type="number" name="newQuantity" id="newQuantity" value="1" min="1" max="<?= $product->productQuantity ?>">
+                        <input type="hidden" name="productID" value="<?= $product->productID ?>">
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
+                        <?php endif; ?>
+                        <button class="buy-button">Add To Cart</button>
+                    </form>
+                <?php endif; ?>
+
             </div>
         </div>
 

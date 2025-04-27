@@ -1,12 +1,5 @@
-
 <?php include 'base.php'; ?>
 <?php include 'header.php';
-
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] == 'admin') {
-    header("Location: ../dashboard.php");
-    temp('error', 'Admins are not allowed to access this page.');
-    exit();
-}
 
 $categories = $_db->query('SELECT categoryID, categoryName FROM category WHERE categoryStatus = "Available"')->fetchAll();
 
@@ -127,11 +120,13 @@ $arr = $stm->fetchAll();
                         <p class="product-description"><?= $p->productDescription ?></p>
                     </a>
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <form action="/cartItem/addCartItem.php" method="POST">
-                            <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
-                            <input type="hidden" name="productID" value="<?= $p->productID ?>">
-                            <button type="submit" class="buy-button">Add To Cart</button>
-                        </form>
+                        <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin'): ?>
+                            <form action="/cartItem/addCartItem.php" method="POST">
+                                <input type="hidden" name="userID" value="<?= $_SESSION['user_id'] ?>">
+                                <input type="hidden" name="productID" value="<?= $p->productID ?>">
+                                <button type="submit" class="buy-button">Add To Cart</button>
+                            </form>
+                        <?php endif; ?>
                     <?php else: ?>
                         <button class="buy-button" onclick="openLoginPopup()">Add To Cart</button>
                     <?php endif; ?>
