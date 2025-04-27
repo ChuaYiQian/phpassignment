@@ -52,7 +52,7 @@ switch ($sort) {
         $sql .= ' ORDER BY p.salesCount DESC';
         break;
     default:
-        $sql .= ' ORDER BY p.productID DESC'; // or any default sorting you prefer
+        $sql .= ' ORDER BY p.productID DESC';
         break;
 }
 
@@ -70,9 +70,14 @@ $arr = $stm->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Page</title>
     <link rel="stylesheet" href="/css/product.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/home.js"></script>
 </head>
 
 <body>
+    <?php if ($msg = temp('error')): ?>
+        <div class="popup-message error"><?= htmlspecialchars($msg) ?></div>
+    <?php endif; ?>
     <div class="page-wrapper">
         <aside class="sidebar">
             <h2>Filter</h2>
@@ -135,9 +140,6 @@ $arr = $stm->fetchAll();
         </div>
 
     </div>
-
 </body>
-
 </html>
-
 <?php include 'footer.php'; ?>
