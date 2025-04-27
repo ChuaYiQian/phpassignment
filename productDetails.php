@@ -53,8 +53,24 @@ $reviewStmt = $_db->prepare("
     AND r.reviewDescription != ''
     ORDER BY r.reviewDate DESC
 ");
+
+
+
 $reviewStmt->execute([$id]);
 $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
+
+$goodCount = $normalCount = $badCount = 0;
+foreach ($reviews as $review) {
+    $stars = $review->starQuantity;
+    if ($stars >= 4) {
+        $goodCount++;
+    } elseif ($stars >= 2) {
+        $normalCount++;
+    } else {
+        $badCount++;
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -105,9 +121,14 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
 
         <div class="product-reviews">
             <h2>Customer Reviews</h2>
+            <div class="filter-buttons">
+            <button class="filter-btn good" data-filter="4-5">Good (<?= $goodCount ?>)</button>
+            <button class="filter-btn normal" data-filter="2-3">Normal (<?= $normalCount ?>)</button>
+            <button class="filter-btn bad" data-filter="0-1">Bad (<?= $badCount ?>)</button>
+        </div>
             <?php if (count($reviews) > 0): ?>
                 <?php foreach ($reviews as $review): ?>
-                    <div class="review-card">
+                    <div class="review-card" data-stars="<?= $review->starQuantity ?>">
 
                         <div class="review-header">
                         <img src="<?= htmlspecialchars($review->userProfilePicture) ?>" width="50" height="50" style="border-radius:50%;">
@@ -127,6 +148,52 @@ $reviews = $reviewStmt->fetchAll(PDO::FETCH_OBJ);
             <?php endif; ?>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.filter-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const range = this.dataset.filter.split('-');
+            const minStar = parseInt(range[0]);
+            const maxStar = parseInt(range[1]);
+
+            document.querySelectorAll('.review-card').forEach(card => {
+                const stars = parseInt(card.dataset.stars);
+                card.classList.remove('good', 'normal', 'bad');
+                
+                if (stars >= minStar && stars <= maxStar) {
+                    card.style.display = 'block';
+                    if (minStar === 4) card.classList.add('good');
+                    else if (minStar === 2) card.classList.add('normal');
+                    else card.classList.add('bad');
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            this.classList.add('active');
+        });
+    });
+
+    const resetFilter = document.createElement('button');
+    resetFilter.textContent = 'Show All';
+    resetFilter.className = 'filter-btn';
+    resetFilter.addEventListener('click', () => {
+        document.querySelectorAll('.review-card').forEach(card => {
+            card.style.display = 'block';
+            card.classList.remove('good', 'normal', 'bad');
+        });
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+    });
+    document.querySelector('.filter-buttons').appendChild(resetFilter);
+});
+    </script>
+
 </body>
 </html>
 <?php include 'footer.php'; ?>
