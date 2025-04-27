@@ -56,6 +56,37 @@ foreach ($cartItems as $item) {
         $item['cartQuantity'] = $newQuantity;
     }
 }
+
+$searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+try {
+    if ($searchKeyword !== '') {
+        $cartStmt = $_db->prepare("
+            SELECT ci.*, p.productName, p.productPicture, p.productPrice, p.productDescription, productQuantity
+            FROM cartItem ci
+            JOIN product p ON ci.productID = p.productID
+            WHERE ci.cartID = ? 
+            AND p.productStatus = 'Available' 
+            AND p.productName LIKE ?
+        ");
+        $cartStmt->execute([$cartID, "%$searchKeyword%"]);
+    } else {
+        $cartStmt = $_db->prepare("
+            SELECT ci.*, p.productName, p.productPicture, p.productPrice, p.productDescription, productQuantity
+            FROM cartItem ci
+            JOIN product p ON ci.productID = p.productID
+            WHERE ci.cartID = ? 
+            AND p.productStatus = 'Available'
+        ");
+        $cartStmt->execute([$cartID]);
+    }
+
+    $cartItems = $cartStmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Database error: " . $e->getMessage());
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -66,6 +97,9 @@ foreach ($cartItems as $item) {
     <title>Shopping Cart</title>
     <link rel="stylesheet" href="/css/addToCart.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        
+    </style>
 </head>
 
 <body>
@@ -83,6 +117,32 @@ foreach ($cartItems as $item) {
                 <h1>PopZone Collectibles</h1>
             </div>
         </div>
+        <form method="get" action="/cart/cart.php" class="search-form">
+            <input type="text" name="search" placeholder="Search products..." value="<?= htmlspecialchars($searchKeyword) ?>" style="
+            padding: 10px 20px;
+            width: 300px;
+            max-width: 90%;
+            border: 2px solid #ccc;
+            border-radius: 25px 0 0 25px;
+            outline: none;
+            font-size: 16px;
+            transition: 0.3s;
+        "
+        onfocus="this.style.borderColor='#007bff';"
+        onblur="this.style.borderColor='#ccc';">
+            <button type="submit" style="
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 0 25px 25px 0;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        "
+        onmouseover="this.style.backgroundColor='#0056b3';"
+        onmouseout="this.style.backgroundColor='#007bff';">Search</button>
+        </form>
         <div class="container">
             <?php if (empty($cartItems)): ?>
                 <img id="emptyCart" src="/images/emptyCart.png" height="100px" width="100px"
@@ -94,19 +154,7 @@ foreach ($cartItems as $item) {
                 <div style="margin: 15px;">
                     <label><input type="checkbox" id="select-all"> Select All</label>
                 </div>
-                <?php $stmt = $_db->prepare("
-    SELECT c.productID, c.cartQuantity, p.productName, p.productDescription, 
-           p.productPrice, p.productQuantity, p.productPicture 
-    FROM cartItem c
-    JOIN product p ON c.productID = p.productID
-    JOIN category cat ON p.categoryID = cat.categoryID
-    WHERE c.cartID = ? 
-    AND p.productStatus = 'Available' 
-    AND cat.categoryStatus = 'Available'
-");
-                $stmt->execute([$cartID]);
-                $cartItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                foreach ($cartItems as $item): ?>
+                <?php foreach ($cartItems as $item): ?>
                     <div class="container-product-card">
                         <div class="product-checkbox">
                             <input type="checkbox" class="cart-checkbox" data-id="<?= $item['productID'] ?>"
@@ -129,8 +177,7 @@ foreach ($cartItems as $item) {
                             </div>
                             <div class="product-quantity">
                                 <form class="quantity-form" method="post" action="/cartItem/updateQuantity.php">
-                                    <input type="number" name="newQuantity" value="<?= $item['cartQuantity'] ?>" min="1"
-                                        max="<?= $item['productQuantity'] ?>">
+                                    <input type="number" name="newQuantity" value="<?= $item['cartQuantity'] ?>" min="1" max="<?= $item['productQuantity'] ?>">
                                     <input type="hidden" name="productID" value="<?= $item['productID'] ?>">
                                     <input type="hidden" name="cartID" value="<?= $cartID ?>">
                                     <button type="submit">Update</button>
@@ -209,13 +256,13 @@ foreach ($cartItems as $item) {
 
             $('#selected-items-list').empty();
 
-            $('.cart-checkbox:checked').each(function () {
+            $('.cart-checkbox:checked').each(function() {
                 const item = {
                     id: $(this).data('id'),
                     name: $(this).data('name'),
                     price: parseFloat($(this).data('price')),
                     qty: parseInt($(this).data('qty')),
-                    total: function () {
+                    total: function() {
                         return this.price * this.qty;
                     }
                 };
@@ -250,14 +297,14 @@ foreach ($cartItems as $item) {
         }
 
         $(document).on('change', '.cart-checkbox', updateTotalPrice);
-        $(document).on('submit', '.quantity-form', function (e) {
+        $(document).on('submit', '.quantity-form', function(e) {
             e.preventDefault();
-            $.post($(this).attr('action'), $(this).serialize(), function () {
+            $.post($(this).attr('action'), $(this).serialize(), function() {
                 location.reload();
             });
         });
 
-        $('#select-all').change(function () {
+        $('#select-all').change(function() {
             $('.cart-checkbox').prop('checked', $(this).prop('checked'));
             updateTotalPrice();
         });
@@ -285,7 +332,7 @@ foreach ($cartItems as $item) {
             hideDeleteConfirmation();
         }
 
-        window.onclick = function (event) {
+        window.onclick = function(event) {
             const modal = document.getElementById('confirmation');
             if (event.target === modal) {
                 hideDeleteConfirmation();
