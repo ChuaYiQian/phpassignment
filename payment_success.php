@@ -44,6 +44,22 @@ $paymentMethodName = $payStmt->fetchColumn();
 $recipientEmail = $user ? $user['userEmail'] : null; 
 $userAddress = $user ? $user['userAddress'] : null;
 
+$orderID = $_GET['orderID'] ?? '';
+
+if ($orderID) {
+    $sql = "SELECT transactionDate FROM transaction WHERE orderID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $orderID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $transaction = $result->fetch_assoc();
+    $transactionDate = $transaction['transactionDate'] ?? null;
+}
+
+date_default_timezone_set('Asia/Kuala_Lumpur'); 
+$transactionDate = date('Y-m-d H:i:s');
+$currentDateTime = $transactionDate;
+
 // Generate the Transaction ID
 function generateTransactionID($db) {
     $stmt = $db->query("SELECT transactionID FROM transaction ORDER BY transactionID DESC LIMIT 1");
@@ -89,6 +105,7 @@ $body = "
     <h2 style='color: #4CAF50;'>Thank you for your payment!</h2>
     <p>Your payment for Order <strong>#$orderID</strong> has been received successfully.</p>
     <h3>Payment Receipt</h3>
+    <p><strong>Transaction Date:</strong> " . htmlspecialchars($transactionDate) . "</p>
     <table style='border-collapse: collapse; width: 100%; max-width: 600px;'>
         <tr style='background-color: #f2f2f2;'>
             <th style='border: 1px solid #ddd; padding: 8px;'>Item</th>
