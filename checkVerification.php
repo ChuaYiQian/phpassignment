@@ -8,7 +8,7 @@ $verified = false;
 if ($email) {
     $stm = $_db->prepare('
         SELECT verifystatus FROM user
-        WHERE email = ?
+        WHERE userEmail = ? 
     ');
 
     $stm->execute([$email]);
